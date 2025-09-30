@@ -1,56 +1,37 @@
-# compiled output
-/dist
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
 /node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
 /build
 
-# Logs
-logs
-*.log
+# debug
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# OS
-.DS_Store
+# env files
+.env*
 
-# Tests
-/coverage
-/.nyc_output
+# vercel
+.vercel
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Ignorar node_modules en cualquier microservicio
+**/node_modules/
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# Ignorar builds
+**/dist/
+**/build/
 
-# temp directory
-.temp
-.tmp
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# Variables de entorno
+**/.env

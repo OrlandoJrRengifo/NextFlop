@@ -1,0 +1,180 @@
+services:
+  # MongoDB instances for each microservice
+  mongodb-auth:
+    image: mongo:7.0
+    container_name: nextflop-mongodb-auth
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: nextflop_auth
+    volumes:
+      - mongodb_auth_data:/data/db
+    networks:
+      - nextflop-network
+
+  mongodb-subscriptions:
+    image: mongo:7.0
+    container_name: nextflop-mongodb-subscriptions
+    restart: always
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: nextflop_subscriptions
+    volumes:
+      - mongodb_subscriptions_data:/data/db
+    networks:
+      - nextflop-network
+
+  mongodb-billing:
+    image: mongo:7.0
+    container_name: nextflop-mongodb-billing
+    restart: always
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: nextflop_billing
+    volumes:
+      - mongodb_billing_data:/data/db
+    networks:
+      - nextflop-network
+
+  mongodb-media:
+    image: mongo:7.0
+    container_name: nextflop-mongodb-media
+    restart: always
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: nextflop_media
+    volumes:
+      - mongodb_media_data:/data/db
+    networks:
+      - nextflop-network
+
+  # RabbitMQ for async communication
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: nextflop-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nextflop-network
+
+  # Auth-Users Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: nextflop-auth-service
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:password123@mongodb-auth:27017/nextflop_auth?authSource=admin
+      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - mongodb-auth
+      - rabbitmq
+    networks:
+      - nextflop-network
+
+  # Subscriptions Service
+  subscriptions-service:
+    build:
+      context: ./subscriptions-service
+      dockerfile: Dockerfile
+    container_name: nextflop-subscriptions-service
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:password123@mongodb-subscriptions:27017/nextflop_subscriptions?authSource=admin
+      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
+      - AUTH_SERVICE_URL=http://auth-service:3000
+    depends_on:
+      - mongodb-subscriptions
+      - rabbitmq
+      - auth-service
+    networks:
+      - nextflop-network
+
+  # Billing Service
+  billing-service:
+    build:
+      context: ./billing-service
+      dockerfile: Dockerfile
+    container_name: nextflop-billing-service
+    restart: always
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:password123@mongodb-billing:27017/nextflop_billing?authSource=admin
+      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
+      - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+      - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+      - AUTH_SERVICE_URL=http://auth-service:3000
+      - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000
+    depends_on:
+      - mongodb-billing
+      - rabbitmq
+      - auth-service
+      - subscriptions-service
+    networks:
+      - nextflop-network
+
+  # Media Service
+  media-service:
+    build:
+      context: ./media-service
+      dockerfile: Dockerfile
+    container_name: nextflop-media-service
+    restart: always
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:password123@mongodb-media:27017/nextflop_media?authSource=admin
+      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
+      - AUTH_SERVICE_URL=http://auth-service:3000
+    depends_on:
+      - mongodb-media
+      - rabbitmq
+      - auth-service
+    networks:
+      - nextflop-network
+
+volumes:
+  mongodb_auth_data:
+  mongodb_subscriptions_data:
+  mongodb_billing_data:
+  mongodb_media_data:
+  rabbitmq_data:
+
+networks:
+  nextflop-network:
+    driver: bridge
