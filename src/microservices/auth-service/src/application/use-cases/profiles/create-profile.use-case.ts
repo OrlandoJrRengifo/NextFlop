@@ -1,27 +1,32 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { IProfileRepository, PROFILE_REPOSITORY } from "../../../domain/repositories/profile.repository.interface";
 import { Profile } from "../../../domain/entities/profile.entity";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { CreateProfileDto } from "../../../presentation/dtos/profile/create-profile.dto";
 
 @Injectable()
 export class CreateProfileUseCase {
   constructor(
-    @Inject(PROFILE_REPOSITORY) private readonly profileRepository: IProfileRepository,
+    @Inject(PROFILE_REPOSITORY) 
+    private readonly profileRepository: IProfileRepository,
   ) {}
 
-  async execute(data: { userId: string; name: string; iconUrl?: string }): Promise<Profile> {
+  async execute(data: CreateProfileDto): Promise<Profile> {
+    const now = new Date();
+
     const profile = new Profile(
-      uuidv4(), // id
+      uuidv4(),
       data.userId,
       data.name,
       data.iconUrl || "",
-      [], // tasteProfile
-      [], // favorites
-      [], // watchLater
-      [], // history
-      new Date(), // createdAt
-      new Date(), // updatedAt
+      [],
+      [],
+      [],
+      [],
+      now,
+      now,
     );
+
     return this.profileRepository.create(profile);
   }
 }

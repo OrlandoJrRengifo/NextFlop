@@ -17,7 +17,7 @@ export class RegisterUseCase {
   async execute(
     email: string,
     password: string,
-    fullName: string, // Se cambia firstName y lastName por fullName
+    fullName: string,
   ): Promise<{ user: User; accessToken: string }> {
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
@@ -26,7 +26,6 @@ export class RegisterUseCase {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Se llama a la versión corregida de la fábrica
     const user = this.userFactory.createFromRegistration(
       fullName,
       email,
@@ -38,8 +37,9 @@ export class RegisterUseCase {
     const payload = {
       sub: savedUser.id,
       email: savedUser.email,
-      fullName: savedUser.fullName, // Se usa fullName
+      fullName: savedUser.fullName,
     };
+
     const accessToken = this.jwtService.sign(payload);
 
     return { user: savedUser, accessToken };

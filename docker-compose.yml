@@ -79,7 +79,7 @@ services:
   # Auth-Users Service
   auth-service:
     build:
-      context: ./auth-service
+      context: ./src/microservices/auth-service
       dockerfile: Dockerfile
     container_name: nextflop-auth-service
     restart: always
@@ -101,7 +101,7 @@ services:
   # Subscriptions Service
   subscriptions-service:
     build:
-      context: ./subscriptions-service
+      context: ./src/microservices/subscriptions-service
       dockerfile: Dockerfile
     container_name: nextflop-subscriptions-service
     restart: always
@@ -123,7 +123,7 @@ services:
   # Billing Service
   billing-service:
     build:
-      context: ./billing-service
+      context: ./src/microservices/billing-service
       dockerfile: Dockerfile
     container_name: nextflop-billing-service
     restart: always
@@ -149,7 +149,7 @@ services:
   # Media Service
   media-service:
     build:
-      context: ./media-service
+      context: ./src/microservices/media-service
       dockerfile: Dockerfile
     container_name: nextflop-media-service
     restart: always

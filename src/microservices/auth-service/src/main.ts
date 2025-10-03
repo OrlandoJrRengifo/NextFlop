@@ -1,10 +1,10 @@
-import { NestFactory } from "@nestjs/core"
-import { ValidationPipe } from "@nestjs/common"
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger"
-import { AppModule } from "./app.module"
+import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -13,15 +13,15 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
     }),
-  )
+  );
 
-  // CORS configuration
+  // Enable CORS
   app.enableCors({
     origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"],
     credentials: true,
-  })
+  });
 
-  // Swagger documentation setup
+  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle("Nextflop Auth Service")
     .setDescription("Authentication and User Management API for Nextflop platform")
@@ -31,22 +31,22 @@ async function bootstrap() {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
-        name: "JWT",
+        name: "Authorization",
         description: "Enter JWT token",
         in: "header",
       },
       "JWT-auth",
     )
-    .build()
+    .build();
 
-  const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup("api/docs", app, document)
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api/docs", app, document);
 
-  const port = process.env.PORT || 3000
-  await app.listen(port)
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 
-  console.log(`🚀 Auth Service running on port ${port}`)
-  console.log(`📚 Swagger docs available at http://localhost:${port}/api/docs`)
+  console.log(`🚀 Auth Service running on port ${port}`);
+  console.log(`📚 Swagger docs available at http://localhost:${port}/api/docs`);
 }
 
-bootstrap()
+bootstrap();

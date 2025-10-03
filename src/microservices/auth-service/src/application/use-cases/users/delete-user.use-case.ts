@@ -1,21 +1,20 @@
 import { Injectable, Inject, NotFoundException } from "@nestjs/common";
 import { USER_REPOSITORY, IUserRepository } from "../../../domain/repositories/user.repository.interface";
-import { User } from "../../../domain/entities/user.entity";
 
 @Injectable()
-export class GetUserUseCase {
+export class DeleteUserUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
   ) {}
 
-  async execute(userId: string): Promise<User> {
-    const user = await this.userRepository.findById(userId);
+  async execute(userId: string): Promise<{ message: string }> {
+    const deleted = await this.userRepository.delete(userId);
 
-    if (!user) {
+    if (!deleted) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
 
-    return user;
+    return { message: `User with id ${userId} deleted successfully` };
   }
 }

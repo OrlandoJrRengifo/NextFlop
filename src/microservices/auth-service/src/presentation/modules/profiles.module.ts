@@ -7,6 +7,8 @@ import { UpdateProfileUseCase } from "../../application/use-cases/profiles/updat
 import { AddToListUseCase } from "../../application/use-cases/profiles/add-to-list.use-case";
 import { RemoveFromListUseCase } from "../../application/use-cases/profiles/remove-from-list.use-case";
 import { ProfileRepository } from "../../infrastructure/repositories/profile.repository";
+import { DeleteProfileUseCase } from "../../application/use-cases/profiles/delete-profile.use-case";
+
 // Se importa 'ProfileDocument' que es el nombre correcto de la clase
 import { ProfileDocument, ProfileSchema } from "../../infrastructure/database/schemas/profile.schema";
 import { RabbitMQModule } from "../../infrastructure/messaging/rabbitmq.module";
@@ -25,6 +27,7 @@ import { PROFILE_REPOSITORY } from "../../domain/repositories/profile.repository
     UpdateProfileUseCase,
     AddToListUseCase,
     RemoveFromListUseCase,
+    DeleteProfileUseCase,
     {
       provide: PROFILE_REPOSITORY,
       useClass: ProfileRepository,

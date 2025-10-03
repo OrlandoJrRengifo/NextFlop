@@ -50,9 +50,10 @@ export class UserRepository implements IUserRepository {
       userDoc.birthDate,
       userDoc.email,
       userDoc.password,
-      userDoc.currentPoints,
+      userDoc.currentPoints ?? 0,
       userDoc.createdAt,
-      userDoc.updatedAt
+      userDoc.updatedAt,
     );
   }
+
 }

@@ -8,20 +8,19 @@ export class UserDocument extends Document {
 
   @Prop()
   birthDate: Date;
-  
-  @Prop({ required: true, unique: true, index: true })
+
+  @Prop({ required: true, unique: true })
   email: string;
 
   @Prop({ required: true })
   password: string;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ default: 0 })
   currentPoints: number;
-  
-  // Se añaden para que TypeScript los reconozca
+
   @Prop()
   createdAt: Date;
-  
+
   @Prop()
   updatedAt: Date;
 }

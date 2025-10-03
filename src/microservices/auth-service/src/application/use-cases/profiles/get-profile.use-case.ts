@@ -5,13 +5,14 @@ import { Profile } from "../../../domain/entities/profile.entity"
 @Injectable()
 export class GetProfileUseCase {
   constructor(
-    @Inject(PROFILE_REPOSITORY) private readonly profileRepository: IProfileRepository,
+    @Inject(PROFILE_REPOSITORY) 
+    private readonly profileRepository: IProfileRepository,
   ) {}
 
-  async execute(id: string): Promise<Profile> {
-    const profile = await this.profileRepository.findById(id)
+  async execute(profileId: string): Promise<Profile> {
+    const profile = await this.profileRepository.findById(profileId)
     if (!profile) {
-      throw new NotFoundException(`Profile with id ${id} not found`)
+      throw new NotFoundException(`Profile with id ${profileId} not found`)
     }
     return profile
   }
