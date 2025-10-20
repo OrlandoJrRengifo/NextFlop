@@ -98,10 +98,11 @@ services:
     networks:
       - nextflop-network
 
-  # Subscriptions Service
+# NEWWWWWWWW
+# Subscriptions Service
   subscriptions-service:
     build:
-      context: ./src/microservices/subscriptions-service
+      context: ./src/microservices/subscriptions-service # O la ruta que tengas
       dockerfile: Dockerfile
     container_name: nextflop-subscriptions-service
     restart: always
@@ -113,12 +114,17 @@ services:
       - MONGODB_URI=mongodb://admin:password123@mongodb-subscriptions:27017/nextflop_subscriptions?authSource=admin
       - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3000
+      # --- LÍNEA A AÑADIR ---
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
       - mongodb-subscriptions
       - rabbitmq
       - auth-service
     networks:
       - nextflop-network
+###########################
+
+
 
   # Billing Service
   billing-service:
