@@ -1,0 +1,12 @@
+# k8s/subscriptions-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: subscriptions-service
+spec:
+  selector:
+    app: subscriptions-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

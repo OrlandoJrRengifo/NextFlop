@@ -1,0 +1,32 @@
+# k8s/auth-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-deployment
+spec:
+  replicas: 2 # Le decimos a K8s que mantenga 2 copias de este servicio corriendo
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: nextflop-auth-service:latest # El nombre de la imagen Docker que creamos
+          imagePullPolicy: IfNotPresent # Para que use la imagen local si existe
+          ports:
+            - containerPort: 3000 # El puerto interno en el que corre la aplicación
+          env:
+            - name: PORT
+              value: "3000"
+            - name: JWT_SECRET
+              value: "your-super-secret-jwt-key-change-in-production"
+            - name: JWT_EXPIRES_IN
+              value: "24h"
+            - name: MONGODB_URI
+              value: "mongodb://admin:password123@mongodb-auth:27017/nextflop_auth?authSource=admin"
+            - name: RABBITMQ_URL
+              value: "amqp://admin:password123@rabbitmq:5672"

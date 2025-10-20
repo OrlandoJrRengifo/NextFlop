@@ -1,0 +1,32 @@
+# k8s/subscriptions-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscriptions-service-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: subscriptions-service
+  template:
+    metadata:
+      labels:
+        app: subscriptions-service
+    spec:
+      containers:
+        - name: subscriptions-service
+          image: nextflop-subscriptions-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: JWT_SECRET
+              value: "your-super-secret-jwt-key-change-in-production"
+            - name: MONGODB_URI
+              value: "mongodb://admin:password123@mongodb-subscriptions:27017/nextflop_subscriptions?authSource=admin"
+            - name: RABBITMQ_URL
+              value: "amqp://admin:password123@rabbitmq:5672"
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service" # Dentro de K8s, los servicios se hablan por su nombre

@@ -1,0 +1,12 @@
+# k8s/media-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-service
+spec:
+  selector:
+    app: media-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000 # El puerto interno del contenedor

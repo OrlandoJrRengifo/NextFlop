@@ -1,0 +1,30 @@
+# k8s/media-ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: media-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: media-service
+                port:
+                  number: 80
+          - path: /genres
+            pathType: Prefix
+            backend:
+              service:
+                name: media-service
+                port:
+                  number: 80
+          - path: /search
+            pathType: Prefix
+            backend:
+              service:
+                name: media-service
+                port:
+                  number: 80
