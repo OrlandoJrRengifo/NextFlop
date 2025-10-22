@@ -9,7 +9,7 @@ import { Media, MediaSchema } from "./schemas/media.schema";
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>("DATABASE_URL") || "mongodb://localhost:27017/nextflop_media",
+        uri: configService.get<string>('MONGODB_URI'),
       }),
       inject: [ConfigService],
     }),
