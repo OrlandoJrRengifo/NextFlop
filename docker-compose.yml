@@ -113,6 +113,7 @@ services:
       - MONGODB_URI=mongodb://admin:password123@mongodb-subscriptions:27017/nextflop_subscriptions?authSource=admin
       - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
       - mongodb-subscriptions
       - rabbitmq
@@ -138,6 +139,7 @@ services:
       - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
       - AUTH_SERVICE_URL=http://auth-service:3000
       - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
       - mongodb-billing
       - rabbitmq
@@ -167,6 +169,33 @@ services:
       - auth-service
     networks:
       - nextflop-network
+
+  # API Gateway
+  kong:
+    image: kong:latest
+    container_name: nextflop-kong-gateway
+    restart: always
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: "/usr/local/kong/declarative/kong.yml"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+    volumes:
+      - ./kong.yml:/usr/local/kong/declarative/kong.yml
+    networks:
+      - nextflop-network
+    depends_on:
+      - auth-service
+      - subscriptions-service
+      - billing-service
+      - media-service
 
 volumes:
   mongodb_auth_data:
