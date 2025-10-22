@@ -35,14 +35,15 @@ async function bootstrap() {
         description: "Enter JWT token",
         in: "header",
       },
-      "JWT-auth",
+      "JWT-auth", // key
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
 
-  const port = process.env.PORT || 3000;
+  // Usamos el puerto definido en el .env o en docker-compose, con un fallback a 3001 para desarrollo local
+  const port = process.env.PORT || 3001; 
   await app.listen(port);
 
   console.log(`🚀 Auth Service running on port ${port}`);

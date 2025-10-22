@@ -9,7 +9,7 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { CreateProfileDto } from "../dtos/profile/create-profile.dto";
 import { UpdateProfileDto } from "../dtos/profile/update-profile.dto";
 import { DeleteProfileUseCase } from "../../application/use-cases/profiles/delete-profile.use-case";
-
+import { AddToListDto } from "../dtos/profile/add-to-list.dto"; // <-- 1. IMPORTAR EL NUEVO DTO
 
 @ApiTags("profiles")
 @Controller("profiles")
@@ -62,7 +62,7 @@ export class ProfilesController {
   async addToList(
     @Param('id') profileId: string,
     @Param('listType') listType: 'favorites' | 'watchLater',
-    @Body() itemData: { mediaId: string }
+    @Body() itemData: AddToListDto // <-- 2. USAR EL NUEVO DTO AQUÍ
   ) {
     return this.addToListUseCase.execute(profileId, listType, itemData.mediaId);
   }
