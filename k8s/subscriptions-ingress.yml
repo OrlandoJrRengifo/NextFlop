@@ -1,0 +1,23 @@
+# k8s/subscriptions-ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: subscriptions-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /subscriptions
+            pathType: Prefix
+            backend:
+              service:
+                name: subscriptions-service
+                port:
+                  number: 80
+          - path: /plans
+            pathType: Prefix
+            backend:
+              service:
+                name: subscriptions-service
+                port:
+                  number: 80
