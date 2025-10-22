@@ -1,10 +1,12 @@
-import { Controller, Post, Body, Get, Param, Query } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from "@nestjs/swagger";
+import { Controller, Post, Body, Get, Param, Query, UseGuards, Req } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBearerAuth } from "@nestjs/swagger";
+import { Request } from 'express';
 import { ProcessPaymentUseCase } from "../../application/use-cases/payments/process-payment.use-case";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { PaymentDocument } from "../../infrastructure/database/schemas/payment.schema";
-import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto"; // ✅ ruta corregida
+import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto";
+import { JwtAuthGuard } from "../guards/jwt-auth.guard"; // Asumiendo que el guard existe en esta ruta
 
 @ApiTags("Payments")
 @Controller("payments")
@@ -16,14 +18,18 @@ export class PaymentsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard) // Se protege el endpoint
+  @ApiBearerAuth()         // Se indica en Swagger que requiere autorización
   @ApiOperation({ summary: "Procesar un pago" })
   @ApiResponse({ status: 201, description: "Pago procesado correctamente" })
-  async process(@Body() dto: ProcessPaymentDto) {
+  async process(@Body() dto: ProcessPaymentDto, @Req() request: Request) {
+    const user = request.user as any; // Se extrae el usuario del token
+    
     return this.processPaymentUseCase.execute(
-      dto.userId,
+      user.userId, // Se usa el userId del token
       dto.subscriptionId,
       dto.originalAmount,
-      dto.pointsToUse ?? 0,
+      dto.pointsToRedeem ?? 0,
     );
   }
 

@@ -1,18 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsNumber, IsOptional, Min } from "class-validator";
 
-/**
- * Process Payment DTO
- * Datos de entrada para procesar un pago
- */
 export class ProcessPaymentDto {
-  @ApiProperty({
-    description: "ID del usuario que realiza el pago",
-    example: "64f8b2c8e1234567890abcde",
-  })
-  @IsString()
-  userId: string;
-
   @ApiProperty({
     description: "ID de la suscripción a pagar",
     example: "64f8b2c8e1234567890abcde",
@@ -29,12 +18,12 @@ export class ProcessPaymentDto {
   originalAmount: number;
 
   @ApiProperty({
-    description: "Puntos a usar para descuento (opcional)",
+    description: "Puntos a redimir para el descuento (opcional)",
     example: 100,
     required: false,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  pointsToUse?: number;
+  pointsToRedeem?: number;
 }
