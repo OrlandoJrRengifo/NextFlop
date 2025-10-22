@@ -1,6 +1,5 @@
 import type { Subscription, SubscriptionStatus } from "../entities/subscription.entity";
 
-// Creamos un tipo para los datos de creación, que no incluye los métodos de la entidad
 export type CreateSubscriptionData = Omit<Subscription, "id" | "createdAt" | "updatedAt" | "isActive" | "isExpired">;
 
 export interface ISubscriptionRepository {
@@ -9,7 +8,6 @@ export interface ISubscriptionRepository {
   findActiveByUserId(userId: string): Promise<Subscription | null>;
   findByStatus(status: SubscriptionStatus): Promise<Subscription[]>;
   findExpiringSubscriptions(days: number): Promise<Subscription[]>;
-  // El método create ahora usa el tipo de datos simple
   create(subscriptionData: CreateSubscriptionData): Promise<Subscription>;
   update(id: string, subscription: Partial<Subscription>): Promise<Subscription | null>;
   delete(id: string): Promise<boolean>;

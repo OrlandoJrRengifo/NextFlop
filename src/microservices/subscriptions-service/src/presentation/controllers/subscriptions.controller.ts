@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Param, UseGuards, Inject, Body } from "@nestjs/common";
+import { Controller, Get, Post, Put, Param, UseGuards, Inject, Body, Req } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
+import { Request } from 'express';
 import { CreateSubscriptionUseCase } from "../../application/use-cases/subscriptions/create-subscription.use-case";
 import { CancelSubscriptionUseCase } from "../../application/use-cases/subscriptions/cancel-subscription.use-case";
 import { RenewSubscriptionUseCase } from "../../application/use-cases/subscriptions/renew-subscription.use-case";
@@ -8,13 +9,12 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { CreateSubscriptionDto } from "../dtos/subscriptions/create-subscription.dto";
 import { CancelSubscriptionDto } from "../dtos/subscriptions/cancel-subscription.dto";
 import { SubscriptionResponseDto } from "../dtos/subscriptions/subscription-response.dto";
-import { CurrentUser } from "../decorators/current-user.decorator";
 import { Subscription } from "../../domain/entities/subscription.entity";
 
 @ApiTags("Subscriptions")
 @Controller("subscriptions")
-//@UseGuards(JwtAuthGuard)
-//@ApiBearerAuth("JWT-auth")
+@UseGuards(JwtAuthGuard)      // Reactivado
+@ApiBearerAuth("JWT-auth")  // Reactivado
 export class SubscriptionsController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
@@ -28,20 +28,20 @@ export class SubscriptionsController {
   @Post()
   @ApiOperation({ summary: "Create a new subscription" })
   @ApiResponse({ status: 201, description: "Subscription created", type: SubscriptionResponseDto })
-  async createSubscription(@Body() createSubscriptionDto: CreateSubscriptionDto, @CurrentUser() user: any): Promise<SubscriptionResponseDto> {
+  async createSubscription(@Body() createSubscriptionDto: CreateSubscriptionDto, @Req() request: Request): Promise<SubscriptionResponseDto> {
+    const user = request.user as any; // Obtenemos el usuario directamente de la petición
     const subscription = await this.createSubscriptionUseCase.execute(
       user.userId,
       createSubscriptionDto.planId,
-      // Se elimina 'paymentMethodId' porque ya no es parte de la lógica de creación
     );
-
     return this.toResponseDto(subscription);
   }
 
   @Get("my-subscriptions")
   @ApiOperation({ summary: "Get user subscriptions" })
   @ApiResponse({ status: 200, description: "User subscriptions", type: [SubscriptionResponseDto] })
-  async getUserSubscriptions(@CurrentUser() user: any): Promise<SubscriptionResponseDto[]> {
+  async getUserSubscriptions(@Req() request: Request): Promise<SubscriptionResponseDto[]> {
+    const user = request.user as any;
     const subscriptions = await this.subscriptionRepository.findByUserId(user.userId);
     return subscriptions.map((sub) => this.toResponseDto(sub));
   }
@@ -49,7 +49,8 @@ export class SubscriptionsController {
   @Get("active")
   @ApiOperation({ summary: "Get user active subscription" })
   @ApiResponse({ status: 200, description: "Active subscription", type: SubscriptionResponseDto })
-  async getActiveSubscription(@CurrentUser() user: any): Promise<SubscriptionResponseDto | null> {
+  async getActiveSubscription(@Req() request: Request): Promise<SubscriptionResponseDto | null> {
+    const user = request.user as any;
     const subscription = await this.subscriptionRepository.findActiveByUserId(user.userId);
     return subscription ? this.toResponseDto(subscription) : null;
   }
@@ -60,8 +61,9 @@ export class SubscriptionsController {
   async cancelSubscription(
     @Param("id") subscriptionId: string,
     @Body() cancelDto: CancelSubscriptionDto,
-    @CurrentUser() user: any,
+    @Req() request: Request,
   ): Promise<{ message: string }> {
+    const user = request.user as any;
     await this.cancelSubscriptionUseCase.execute(subscriptionId, user.userId, cancelDto.reason);
     return { message: "Subscription canceled successfully" };
   }
@@ -69,7 +71,8 @@ export class SubscriptionsController {
   @Put(":id/renew")
   @ApiOperation({ summary: "Renew subscription" })
   @ApiResponse({ status: 200, description: "Subscription renewed" })
-  async renewSubscription(@Param("id") subscriptionId: string, @CurrentUser() user: any): Promise<{ message: string }> {
+  async renewSubscription(@Param("id") subscriptionId: string, @Req() request: Request): Promise<{ message: string }> {
+    const user = request.user as any;
     await this.renewSubscriptionUseCase.execute(subscriptionId, user.userId);
     return { message: "Subscription renewed successfully" };
   }

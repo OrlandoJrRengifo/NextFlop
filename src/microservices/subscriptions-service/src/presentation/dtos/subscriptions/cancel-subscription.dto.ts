@@ -1,20 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger"
-import { IsOptional, IsString, MaxLength } from "class-validator"
+import { ApiProperty } from "@nestjs/swagger";
+import { IsOptional, IsString } from "class-validator";
 
-/**
- * Cancel Subscription DTO
- * Data Transfer Object for subscription cancellation
- * Following Clean Architecture - Presentation layer
- */
 export class CancelSubscriptionDto {
-  @ApiProperty({
-    description: "Reason for cancellation",
-    example: "Too expensive",
-    required: false,
-    maxLength: 500,
-  })
-  @IsOptional()
+  @ApiProperty({ description: "Reason for cancellation", required: false })
   @IsString()
-  @MaxLength(500)
-  reason?: string
+  @IsOptional()
+  reason?: string;
 }

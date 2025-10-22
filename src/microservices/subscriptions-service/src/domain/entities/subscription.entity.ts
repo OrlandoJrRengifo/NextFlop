@@ -1,5 +1,3 @@
-// src/domain/entities/subscription.entity.ts
-
 export class Subscription {
   constructor(
     public readonly id: string,
@@ -22,10 +20,6 @@ export class Subscription {
     const now = new Date();
     return this.endDate <= now;
   }
-
-  // Los otros métodos como cancel() y renew() se eliminan porque su lógica dependía
-  // de campos que ya no existen. La lógica de cancelación/renovación ahora
-  // se manejará directamente en los Casos de Uso.
 }
 
 export enum SubscriptionStatus {
