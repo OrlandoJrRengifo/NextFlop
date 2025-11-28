@@ -197,6 +197,24 @@ services:
       - billing-service
       - media-service
 
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: nextflop-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: "http://kong:8000"
+    depends_on:
+      - kong
+    networks:
+      - nextflop-network
+
 volumes:
   mongodb_auth_data:
   mongodb_subscriptions_data:
