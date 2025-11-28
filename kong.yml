@@ -1,41 +1,44 @@
-# kong.yml (Corregido)
 _format_version: "3.0"
 
 services:
+  # AUTH SERVICE
   - name: auth-service
     url: http://auth-service:3000
     routes:
       - name: auth-routes
         paths:
-          - /auth
-          - /users
-          - /profiles
-        strip_path: false # <-- AÑADIDO
+          - /api/auth
+          - /api/users
+          - /api/profiles
+        strip_path: true
 
+  # SUBSCRIPTIONS SERVICE
   - name: subscriptions-service
     url: http://subscriptions-service:3000
     routes:
       - name: subscriptions-routes
         paths:
-          - /subscriptions
-          - /plans
-        strip_path: false # <-- AÑADIDO
+          - /api/subscriptions
+          - /api/plans
+        strip_path: true
 
+  # BILLING SERVICE
   - name: billing-service
     url: http://billing-service:3000
     routes:
       - name: billing-routes
         paths:
-          - /payments
-          - /webhooks
-        strip_path: false # <-- AÑADIDO
+          - /api/payments
+          - /api/webhooks
+        strip_path: true
 
+  # MEDIA SERVICE
   - name: media-service
     url: http://media-service:3000
     routes:
       - name: media-routes
         paths:
-          - /media
-          - /genres
-          - /search
-        strip_path: false # <-- AÑADIDO
+          - /api/media
+          - /api/genres
+          - /api/search
+        strip_path: true

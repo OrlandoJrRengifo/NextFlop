@@ -31,7 +31,7 @@ export default function LandingPage() {
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: `url(/placeholder.svg?height=1080&width=1920&query=cinematic+movie+theater+with+vibrant+colors)`,
+            backgroundImage: "url('/fondo.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
