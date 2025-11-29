@@ -1,70 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { ContentCarousel } from '@/components/content-carousel'
 import { MovieModal } from '@/components/movie-modal'
 
-// Mock data for shows
-const recommendedShows = [
-  { id: '1', title: 'Serie Drama', image: '/dramatic-tv-series.png' },
-  { id: '2', title: 'Comedia Sitcom', image: '/placeholder.svg?height=450&width=300' },
-  { id: '3', title: 'Thriller Serie', image: '/placeholder.svg?height=450&width=300' },
-  { id: '4', title: 'Sci-Fi Show', image: '/placeholder.svg?height=450&width=300' },
-  { id: '5', title: 'Drama Médico', image: '/placeholder.svg?height=450&width=300' },
-  { id: '6', title: 'Serie Policiaca', image: '/placeholder.svg?height=450&width=300' },
-]
+import { apiFetch } from '@/services/api'
 
-const popularShows = [
-  { id: '7', title: 'Top Serie #1', image: '/placeholder.svg?height=450&width=300' },
-  { id: '8', title: 'Trending Show', image: '/placeholder.svg?height=450&width=300' },
-  { id: '9', title: 'Binge Worthy', image: '/placeholder.svg?height=450&width=300' },
-  { id: '10', title: 'Fan Loved', image: '/placeholder.svg?height=450&width=300' },
-  { id: '11', title: 'Must See', image: '/placeholder.svg?height=450&width=300' },
-  { id: '12', title: 'Viral Series', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const newShows = [
-  { id: '13', title: 'Nueva Temporada', image: '/placeholder.svg?height=450&width=300' },
-  { id: '14', title: 'Fresh Series', image: '/placeholder.svg?height=450&width=300' },
-  { id: '15', title: 'Just Premiered', image: '/placeholder.svg?height=450&width=300' },
-  { id: '16', title: 'Latest Drop', image: '/placeholder.svg?height=450&width=300' },
-  { id: '17', title: 'New Episodes', image: '/placeholder.svg?height=450&width=300' },
-  { id: '18', title: 'Recent Show', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const miniSeries = [
-  { id: '19', title: 'Miniserie 1', image: '/placeholder.svg?height=450&width=300' },
-  { id: '20', title: 'Limited Series', image: '/placeholder.svg?height=450&width=300' },
-  { id: '21', title: 'Short Run', image: '/placeholder.svg?height=450&width=300' },
-  { id: '22', title: 'Mini Drama', image: '/placeholder.svg?height=450&width=300' },
-  { id: '23', title: 'Quick Watch', image: '/placeholder.svg?height=450&width=300' },
-  { id: '24', title: 'Compact Series', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const top10Shows = [
-  { id: '25', title: 'Top 10 #1', image: '/placeholder.svg?height=450&width=300' },
-  { id: '26', title: 'Top 10 #2', image: '/placeholder.svg?height=450&width=300' },
-  { id: '27', title: 'Top 10 #3', image: '/placeholder.svg?height=450&width=300' },
-  { id: '28', title: 'Top 10 #4', image: '/placeholder.svg?height=450&width=300' },
-  { id: '29', title: 'Top 10 #5', image: '/placeholder.svg?height=450&width=300' },
-  { id: '30', title: 'Top 10 #6', image: '/placeholder.svg?height=450&width=300' },
-]
+const EMPTY: any[] = []
 
 export default function ShowsPage() {
   const [selectedShow, setSelectedShow] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [recommendedShows, setRecommendedShows] = useState<any[]>(EMPTY)
+  const [popularShows, setPopularShows] = useState<any[]>(EMPTY)
+  const [newShows, setNewShows] = useState<any[]>(EMPTY)
+  const [miniSeries, setMiniSeries] = useState<any[]>(EMPTY)
+  const [top10Shows, setTop10Shows] = useState<any[]>(EMPTY)
 
-  const handleItemClick = (id: string) => {
-    setSelectedShow({
-      id,
-      title: 'Serie Ejemplo',
-      description: 'Una serie emocionante con múltiples temporadas que te mantendrá enganchado episodio tras episodio.',
-      genre: 'Drama, Thriller',
-      year: '2024-2025',
-      image: '/dramatic-tv-series.png',
-    })
-    setIsModalOpen(true)
+  useEffect(() => {
+    async function load() {
+      try {
+        const [rec, popular, newR, top] = await Promise.all([
+          apiFetch('/api/media?limit=6'),
+          apiFetch('/api/media/popular?limit=6'),
+          apiFetch('/api/media/new-releases?limit=6'),
+          apiFetch('/api/media/popular?limit=6'),
+        ])
+
+        setRecommendedShows(rec.items || rec.media || [])
+        setPopularShows(popular.items || popular.media || [])
+        setNewShows(newR.items || newR.media || [])
+        setMiniSeries([])
+        setTop10Shows(top.items || top.media || [])
+      } catch (err) {
+        console.error('Failed to load shows lists', err)
+      }
+    }
+    load()
+  }, [])
+
+  const handleItemClick = async (id: string) => {
+    try {
+      const m = await apiFetch(`/api/media/${id}`)
+      setSelectedShow(m)
+      setIsModalOpen(true)
+    } catch (err) {
+      console.error('Failed to fetch show details', err)
+    }
   }
 
   return (
@@ -79,35 +62,15 @@ export default function ShowsPage() {
           </div>
 
           {/* Shows Sections */}
-          <ContentCarousel
-            title="Series recomendadas"
-            items={recommendedShows}
-            onItemClick={handleItemClick}
-          />
+          <ContentCarousel title="Series recomendadas" items={recommendedShows} onItemClick={handleItemClick} />
 
-          <ContentCarousel
-            title="Series populares"
-            items={popularShows}
-            onItemClick={handleItemClick}
-          />
+          <ContentCarousel title="Series populares" items={popularShows} onItemClick={handleItemClick} />
 
-          <ContentCarousel
-            title="Series nuevas"
-            items={newShows}
-            onItemClick={handleItemClick}
-          />
+          <ContentCarousel title="Series nuevas" items={newShows} onItemClick={handleItemClick} />
 
-          <ContentCarousel
-            title="Miniseries"
-            items={miniSeries}
-            onItemClick={handleItemClick}
-          />
+          <ContentCarousel title="Miniseries" items={miniSeries} onItemClick={handleItemClick} />
 
-          <ContentCarousel
-            title="Top 10 de la semana"
-            items={top10Shows}
-            onItemClick={handleItemClick}
-          />
+          <ContentCarousel title="Top 10 de la semana" items={top10Shows} onItemClick={handleItemClick} />
         </div>
       </main>
 

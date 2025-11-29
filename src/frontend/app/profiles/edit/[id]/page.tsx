@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -11,19 +11,49 @@ import { Play, ArrowLeft } from 'lucide-react'
 
 const availableIcons = ['👨', '👩', '👦', '👧', '🧔', '👴', '👵', '🧒', '👶', '🐶', '🐱', '🦊']
 
+import { apiAuthFetch } from '@/services/api'
+
 export default function EditProfilePage() {
   const router = useRouter()
-  // Mock current profile data
-  const [profileName, setProfileName] = useState('Juan')
+  const [profileName, setProfileName] = useState('')
   const [selectedIcon, setSelectedIcon] = useState('👨')
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        // extract profile id from URL
+        const path = window.location.pathname
+        const id = path.split('/').pop()
+        if (!id) return
+        const data = await apiAuthFetch(`/api/users/profiles/${id}`)
+        setProfileName(data?.name || '')
+        setSelectedIcon(data?.icon || '👨')
+      } catch (err) {
+        console.error('Failed to load profile', err)
+      }
+    }
+    loadProfile()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('[v0] Profile updated:', { profileName, selectedIcon })
-    alert('Perfil actualizado exitosamente')
+    try {
+      const path = window.location.pathname
+      const id = path.split('/').pop()
+      if (id) {
+        await apiAuthFetch(`/api/users/profiles/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name: profileName, icon: selectedIcon }),
+        })
+      }
+      alert('Perfil actualizado exitosamente')
+      console.log('Profile updated', { profileName, selectedIcon })
+    } catch (err) {
+      console.error('Profile update failed', err)
+      alert('Error al actualizar el perfil')
+    }
     setIsLoading(false)
     router.push('/home')
   }

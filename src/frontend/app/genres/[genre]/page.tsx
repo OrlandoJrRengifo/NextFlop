@@ -1,24 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { MovieModal } from '@/components/movie-modal'
 import { useParams } from 'next/navigation'
 
-// Mock data
-const genreContent: Record<string, any[]> = {
-  action: Array.from({ length: 24 }, (_, i) => ({
-    id: `action-${i + 1}`,
-    title: `Película de Acción ${i + 1}`,
-    image: `/placeholder.svg?height=450&width=300&query=action+movie+${i + 1}`,
-  })),
-  comedy: Array.from({ length: 24 }, (_, i) => ({
-    id: `comedy-${i + 1}`,
-    title: `Comedia ${i + 1}`,
-    image: `/placeholder.svg?height=450&width=300&query=comedy+movie+${i + 1}`,
-  })),
-  // Add more genres as needed
-}
+import { apiFetch } from '@/services/api'
 
 export default function GenrePage() {
   const params = useParams()
@@ -26,19 +13,29 @@ export default function GenrePage() {
   const [selectedMovie, setSelectedMovie] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const content = genreContent[genre] || []
+  const [content, setContent] = useState<any[]>([])
+  useEffect(() => {
+    async function loadByGenre() {
+      try {
+        const res = await apiFetch(`/api/media/search?genres=${genre}&limit=24`)
+        setContent(res.items || res.media || [])
+      } catch (err) {
+        console.error('failed to load genre content', err)
+        setContent([])
+      }
+    }
+    loadByGenre()
+  }, [genre])
   const genreName = genre.charAt(0).toUpperCase() + genre.slice(1)
 
-  const handleItemClick = (item: any) => {
-    setSelectedMovie({
-      id: item.id,
-      title: item.title,
-      description: `Una increíble ${genreName.toLowerCase()} que te mantendrá entretenido de principio a fin.`,
-      genre: genreName,
-      year: '2025',
-      image: item.image,
-    })
-    setIsModalOpen(true)
+  const handleItemClick = async (item: any) => {
+    try {
+      const m = await apiFetch(`/api/media/${item.id}`)
+      setSelectedMovie(m)
+      setIsModalOpen(true)
+    } catch (err) {
+      console.error('Failed to fetch media item', err)
+    }
   }
 
   return (

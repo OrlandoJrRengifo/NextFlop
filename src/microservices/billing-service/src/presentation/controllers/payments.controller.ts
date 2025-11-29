@@ -9,7 +9,7 @@ import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 
 @ApiTags("Payments")
-@Controller()
+@Controller("api/billing")
 export class PaymentsController {
   constructor(
     private readonly processPaymentUseCase: ProcessPaymentUseCase,

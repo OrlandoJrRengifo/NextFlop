@@ -13,13 +13,16 @@ import { DeleteMediaUseCase } from "../../application/use-cases/media/delete-med
 import { GetMediaUseCase } from "../../application/use-cases/media/get-media.use-case";
 import { ListMediaUseCase } from "../../application/use-cases/media/list-media.usecase";
 import { SearchMediaUseCase } from "../../application/use-cases/media/search-media.use-case";
+import { FindPopularUseCase } from "../../application/use-cases/media/find-popular.usecase";
+import { FindNewReleasesUseCase } from "../../application/use-cases/media/find-new-releases.usecase";
+import { FindRecommendedUseCase } from "../../application/use-cases/media/recommend-similar.usecase";
 import { IncrementViewCountUseCase } from "../../application/use-cases/media/increment-view.usecase";
 import { UpdateRatingUseCase } from "../../application/use-cases/media/update-rating.usecase";
 import { CreateMediaDto as CreateMediaPresentationDto } from "../dtos/media/create-media.dto";
 import { CreateMediaDto as CreateMediaAppDto } from "../../application/dto/media.dto";
 
 @ApiTags("Media")
-@Controller()
+@Controller("api/media")
 export class MediaController {
   constructor(
     private readonly createMediaUseCase: CreateMediaUseCase,
@@ -28,6 +31,9 @@ export class MediaController {
     private readonly getMediaUseCase: GetMediaUseCase,
     private readonly listMediaUseCase: ListMediaUseCase,
     private readonly searchMediaUseCase: SearchMediaUseCase,
+    private readonly findPopularUseCase: FindPopularUseCase,
+    private readonly findNewReleasesUseCase: FindNewReleasesUseCase,
+    private readonly findRecommendedUseCase: FindRecommendedUseCase,
     private readonly incrementViewCountUseCase: IncrementViewCountUseCase,
     private readonly updateRatingUseCase: UpdateRatingUseCase,
   ) {}
@@ -67,6 +73,34 @@ export class MediaController {
       total: result.total,
       items: result.media.map((m) => this.toDto(m)),
     };
+  }
+
+  @Get("popular")
+  @ApiOperation({ summary: "Get popular media" })
+  @ApiResponse({ status: 200, type: [MediaResponseDto] })
+  async popular(@Query('limit') limit?: string) {
+    const l = limit ? parseInt(limit) : 10;
+    const items = await this.findPopularUseCase.execute(l);
+    return items.map((m) => this.toDto(m));
+  }
+
+  @Get("new-releases")
+  @ApiOperation({ summary: "Get new releases" })
+  @ApiResponse({ status: 200, type: [MediaResponseDto] })
+  async newReleases(@Query('limit') limit?: string) {
+    const l = limit ? parseInt(limit) : 10;
+    const items = await this.findNewReleasesUseCase.execute(l);
+    return items.map((m) => this.toDto(m));
+  }
+
+  @Get('recommended')
+  @ApiOperation({ summary: 'Get recommended items by genres' })
+  @ApiResponse({ status: 200, type: [MediaResponseDto] })
+  async recommended(@Query('genres') genres?: string, @Query('limit') limit?: string) {
+    const list = genres ? genres.split(',').map(g => g.trim()) : [];
+    const l = limit ? parseInt(limit) : 10;
+    const items = await this.findRecommendedUseCase.execute(list, l);
+    return items.map((m) => this.toDto(m));
   }
 
   @Get("search")

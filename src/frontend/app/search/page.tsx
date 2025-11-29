@@ -1,47 +1,65 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { Input } from '@/components/ui/input'
 import { Search, TrendingUp } from 'lucide-react'
 import { MovieModal } from '@/components/movie-modal'
 
-const suggestions = [
-  { id: '1', text: 'Películas de acción', type: 'genre' },
-  { id: '2', text: 'Comedias románticas', type: 'genre' },
-  { id: '3', text: 'Series de suspenso', type: 'genre' },
-  { id: '4', text: 'Documentales de naturaleza', type: 'genre' },
-  { id: '5', text: 'Anime populares', type: 'genre' },
-  { id: '6', text: 'Películas clásicas', type: 'popular' },
-  { id: '7', text: 'Estrenos 2025', type: 'popular' },
-  { id: '8', text: 'Series de Netflix', type: 'popular' },
-]
+import { apiAuthFetch, apiFetch } from '@/services/api'
 
-const mockResults = Array.from({ length: 12 }, (_, i) => ({
-  id: `result-${i + 1}`,
-  title: `Resultado ${i + 1}`,
-  image: `/placeholder.svg?height=450&width=300&query=search+result+${i + 1}`,
-}))
+// suggestions and results come from backend
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMovie, setSelectedMovie] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [results, setResults] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadSuggestions() {
+      try {
+        const res = await apiFetch('/api/media/popular?limit=8')
+        setSuggestions(res.items || res.media || [])
+      } catch (err) {
+        console.error('Failed to load suggestions', err)
+        setSuggestions([])
+      }
+    }
+    loadSuggestions()
+  }, [])
+
+  useEffect(() => {
+    let timer: any
+    if (searchQuery && searchQuery.trim().length > 0) {
+      timer = setTimeout(async () => {
+        try {
+          const res = await apiFetch(`/api/media/search?query=${encodeURIComponent(searchQuery)}&limit=24`)
+          setResults(res.items || res.media || [])
+        } catch (err) {
+          console.error('Search failed', err)
+          setResults([])
+        }
+      }, 300)
+    } else {
+      setResults([])
+    }
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const handleSuggestionClick = (text: string) => {
     setSearchQuery(text)
   }
 
-  const handleResultClick = (item: any) => {
-    setSelectedMovie({
-      id: item.id,
-      title: item.title,
-      description: 'Una película o serie interesante que coincide con tu búsqueda.',
-      genre: 'Varios',
-      year: '2025',
-      image: item.image,
-    })
-    setIsModalOpen(true)
+  const handleResultClick = async (item: any) => {
+    try {
+      const m = await apiFetch(`/api/media/${item.id}`)
+      setSelectedMovie(m)
+      setIsModalOpen(true)
+    } catch (err) {
+      console.error('Failed to fetch item details', err)
+    }
   }
 
   return (
@@ -72,11 +90,11 @@ export default function SearchPage() {
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion.text)}
+                    onClick={() => handleSuggestionClick(suggestion.title || suggestion.text)}
                     className="w-full text-left p-4 rounded-lg bg-card/50 hover:bg-card border border-border hover:border-primary/50 transition-all flex items-center gap-3"
                   >
                     <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span className="text-sm">{suggestion.text}</span>
+                    <span className="text-sm">{suggestion.title || suggestion.text}</span>
                   </button>
                 ))}
               </div>
@@ -90,7 +108,7 @@ export default function SearchPage() {
                     Resultados para "{searchQuery}"
                   </h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {mockResults.map((item) => (
+                    {results.map((item) => (
                       <div
                         key={item.id}
                         className="cursor-pointer group"
@@ -98,7 +116,7 @@ export default function SearchPage() {
                       >
                         <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-2 transition-transform group-hover:scale-105">
                           <img
-                            src={item.image || "/placeholder.svg"}
+                            src={item.posterUrl || item.image || "/placeholder.svg"}
                             alt={item.title}
                             className="w-full h-full object-cover"
                           />

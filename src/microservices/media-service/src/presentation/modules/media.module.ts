@@ -18,6 +18,8 @@ import { SearchMediaUseCase } from "../../application/use-cases/media/search-med
 import { IncrementViewCountUseCase } from "../../application/use-cases/media/increment-view.usecase";
 import { UpdateRatingUseCase } from "../../application/use-cases/media/update-rating.usecase";
 import { FindSimilarUseCase, FindRecommendedUseCase } from "../../application/use-cases/media/recommend-similar.usecase";
+import { FindPopularUseCase } from "../../application/use-cases/media/find-popular.usecase";
+import { FindNewReleasesUseCase } from "../../application/use-cases/media/find-new-releases.usecase";
 
 import { JwtStrategy } from "../guards/jwt.strategy";
 
@@ -40,6 +42,8 @@ import { JwtStrategy } from "../guards/jwt.strategy";
     { provide: UpdateRatingUseCase, useFactory: (repo) => new UpdateRatingUseCase(repo), inject: ["IMediaRepository"] },
     { provide: FindSimilarUseCase, useFactory: (repo) => new FindSimilarUseCase(repo), inject: ["IMediaRepository"] },
     { provide: FindRecommendedUseCase, useFactory: (repo) => new FindRecommendedUseCase(repo), inject: ["IMediaRepository"] },
+    { provide: FindPopularUseCase, useFactory: (repo) => new FindPopularUseCase(repo), inject: ["IMediaRepository"] },
+    { provide: FindNewReleasesUseCase, useFactory: (repo) => new FindNewReleasesUseCase(repo), inject: ["IMediaRepository"] },
     {
       provide: "IMediaRepository",
       useClass: MediaRepository,

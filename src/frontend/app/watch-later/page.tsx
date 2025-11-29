@@ -1,24 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Clock, Trash2, Play } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
+import { apiAuthFetch } from '@/services/api'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
-// Mock data
-const mockWatchLater = [
-  { id: '1', title: 'Acción Extrema', image: '/action-movie.png', addedDate: '2025-01-15', duration: '2h 15m' },
-  { id: '2', title: 'Drama Intenso', image: '/intense-drama-scene.png', addedDate: '2025-01-14', duration: '1h 45m' },
-  { id: '3', title: 'Comedia Romántica', image: '/romantic-comedy.jpg', addedDate: '2025-01-13', duration: '1h 30m' },
-  { id: '4', title: 'Thriller Psicológico', image: '/psychological-thriller.jpg', addedDate: '2025-01-12', duration: '2h 5m' },
-  { id: '5', title: 'Sci-Fi Épico', image: '/epic-sci-fi.jpg', addedDate: '2025-01-10', duration: '2h 30m' },
-  { id: '6', title: 'Terror Nocturno', image: '/horror-movie.png', addedDate: '2025-01-08', duration: '1h 50m' },
-]
 
 export default function WatchLaterPage() {
-  const [items, setItems] = useState(mockWatchLater)
+  const [items, setItems] = useState<any[]>([])
   const [showPopup, setShowPopup] = useState(false)
   const [popupMessage, setPopupMessage] = useState('')
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -31,13 +23,35 @@ export default function WatchLaterPage() {
 
   const confirmRemove = () => {
     if (itemToRemove) {
-      setItems(items.filter(item => item.id !== itemToRemove))
-      setPopupMessage('Eliminado de Ver más tarde')
-      setShowPopup(true)
-      setTimeout(() => setShowPopup(false), 3000)
-      setItemToRemove(null)
+      // call backend to remove
+      (async () => {
+        try {
+          await apiAuthFetch(`/api/users/watchlist/${itemToRemove}`, { method: 'DELETE' })
+          setItems((prev) => prev.filter(item => item.id !== itemToRemove))
+          setPopupMessage('Eliminado de Ver más tarde')
+          setShowPopup(true)
+          setTimeout(() => setShowPopup(false), 3000)
+        } catch (err) {
+          console.error('Failed to remove from watchlist', err)
+        } finally {
+          setItemToRemove(null)
+        }
+      })()
     }
   }
+
+  useEffect(() => {
+    async function loadWatchlist() {
+      try {
+        const resp = await apiAuthFetch('/api/users/watchlist')
+        setItems(resp || [])
+      } catch (err) {
+        console.error('Failed to load watchlist', err)
+        setItems([])
+      }
+    }
+    loadWatchlist()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
