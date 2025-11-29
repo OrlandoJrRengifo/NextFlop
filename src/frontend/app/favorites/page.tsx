@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Heart, Trash2, Play } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import { apiAuthFetch, getAuthToken } from '@/services/api'
+import { apiAuthFetch, getAuthToken, apiFetch } from '@/services/api'
 
 export default function FavoritesPage() {
   const [items, setItems] = useState<Array<any>>([])
@@ -22,9 +22,40 @@ export default function FavoritesPage() {
     const load = async () => {
       try {
         const user = await apiAuthFetch('/api/users/me')
-        // user.favorites expected to be array of ids (e.g. tmdb:12345)
-        const favs = (user?.favorites || []).map((id: string) => ({ id, title: id, image: '/placeholder.svg', addedDate: new Date().toISOString(), rating: 0 }))
-        setItems(favs)
+        // user.favorites may be an array of ids or full objects.
+        const rawFavs = user?.favorites || []
+
+        const resolved = await Promise.all(
+          rawFavs.map(async (f: any, idx: number) => {
+            // if favorite is a string id, fetch metadata
+            if (typeof f === 'string') {
+              try {
+                const body = await apiFetch(`/api/media/${encodeURIComponent(f)}`)
+                const m = body.item || body.media || body
+                return {
+                  id: f,
+                  title: m.title || m.name || f,
+                  image: m.image || m.posterUrl || '/placeholder.svg',
+                  addedDate: new Date().toISOString(),
+                  rating: m.rating || 0,
+                }
+              } catch (err) {
+                return { id: f, title: f, image: '/placeholder.svg', addedDate: new Date().toISOString(), rating: 0 }
+              }
+            }
+
+            // if favorite is an object use its metadata
+            return {
+              id: f.id || f.movieId || String(idx),
+              title: f.title || f.name || f.movieTitle || 'Sin título',
+              image: f.image || f.posterUrl || '/placeholder.svg',
+              addedDate: f.addedDate || f.createdAt || new Date().toISOString(),
+              rating: f.rating || 0,
+            }
+          })
+        )
+
+        setItems(resolved)
       } catch (err) {
         console.error('Failed to load favorites', err)
       } finally {

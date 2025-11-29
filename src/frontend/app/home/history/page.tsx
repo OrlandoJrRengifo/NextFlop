@@ -1,20 +1,39 @@
-'use client'
+ 'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Play, ArrowLeft, History } from 'lucide-react'
+import { apiAuthFetch } from '@/services/api'
 
 export default function HistoryPage() {
   const router = useRouter()
 
-  const historyItems = [
-    { id: 1, title: 'Película de Acción', date: '15 Feb 2025', progress: 75 },
-    { id: 2, title: 'Serie de Drama - T1E5', date: '14 Feb 2025', progress: 100 },
-    { id: 3, title: 'Documental de Naturaleza', date: '13 Feb 2025', progress: 45 },
-    { id: 4, title: 'Comedia Romántica', date: '12 Feb 2025', progress: 100 }
-  ]
+  const [historyItems, setHistoryItems] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const user = await apiAuthFetch('/api/users/me')
+        const raw = user?.history || []
+        const normalized = raw.map((h: any, i: number) => (typeof h === 'string' ? { id: h, title: `Item ${h}`, date: null, progress: 0 } : {
+          id: h.id || h.mediaId || String(i),
+          title: h.title || h.name || h.mediaTitle || 'Sin título',
+          date: h.watchedAt || h.date || null,
+          progress: h.progress || h.watchedPercent || 0,
+          image: h.image || h.posterUrl || h.thumbnail || undefined,
+        }))
+
+        setHistoryItems(normalized)
+      } catch (err) {
+        setHistoryItems([])
+      }
+    }
+
+    loadHistory()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">

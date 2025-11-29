@@ -1,55 +1,60 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Play, Clock, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
+import { apiFetch } from '@/services/api'
 
-const heroSlides = [
-  {
-    id: '1',
-    title: 'Película Destacada 1',
-    description: 'Una increíble aventura épica que te mantendrá al borde de tu asiento.',
-    image: '/epic-movie-scene.jpg',
-  },
-  {
-    id: '2',
-    title: 'Serie Recomendada',
-    description: 'La serie más vista de la temporada. No te la puedes perder.',
-    image: '/dramatic-tv-series.png',
-  },
-  {
-    id: '3',
-    title: 'Nuevo Estreno',
-    description: 'Recién llegada a NextFlop. Descubre esta joya del cine.',
-    image: '/new-movie-release.jpg',
-  },
-]
+interface HeroCarouselProps {
+  onItemClick?: (id: string) => void
+}
 
-export function HeroCarousel() {
+const DEFAULT_SLIDES: any[] = []
+
+export function HeroCarousel({ onItemClick }: HeroCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [slides, setSlides] = useState<any[]>(DEFAULT_SLIDES)
   const [showPopup, setShowPopup] = useState(false)
   const [popupMessage, setPopupMessage] = useState('')
   const [popupIcon, setPopupIcon] = useState<'heart' | 'clock'>('heart')
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    let mounted = true
+
+    async function loadSlides() {
+      try {
+        const res = await apiFetch('/api/media?limit=6')
+        const items = res.items || res.media || []
+        if (mounted) setSlides(items.slice(0, 3))
+      } catch (err) {
+        // ignore error and keep default slides
+      }
+    }
+
+    loadSlides()
+
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+      setCurrentSlide((prev) => (prev + 1) % Math.max(1, slides.length))
     }, 5000)
-    return () => clearInterval(timer)
-  }, [])
+
+    return () => {
+      mounted = false
+      clearInterval(timer)
+    }
+  }, [slides.length])
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
   }
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+    setCurrentSlide((prev) => (prev + 1) % Math.max(1, slides.length))
   }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)
+    setCurrentSlide((prev) => (prev - 1 + Math.max(1, slides.length)) % Math.max(1, slides.length))
   }
 
   const handleAddToWatchLater = (title: string) => {
@@ -77,7 +82,7 @@ export function HeroCarousel() {
   return (
     <>
       <div className="relative w-full h-[70vh] overflow-hidden">
-        {heroSlides.map((slide, index) => (
+        {slides.map((slide, index) => (
           <div
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-700 ${
@@ -98,7 +103,7 @@ export function HeroCarousel() {
                 {slide.description}
               </p>
               <div className="flex gap-3">
-                <Button size="lg" className="bg-primary hover:bg-primary/90">
+                <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => onItemClick?.(slide.id)}>
                   <Play className="h-5 w-5 mr-2 fill-current" />
                   Ver ahora
                 </Button>
@@ -142,7 +147,7 @@ export function HeroCarousel() {
         </Button>
 
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {heroSlides.map((_, index) => (
+          {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}

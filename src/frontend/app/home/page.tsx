@@ -61,12 +61,12 @@ export default function HomePage() {
       <main className="pt-16">
         <div className="space-y-8 pb-12">
           {/* Hero Carousel - Full width */}
-          <HeroCarousel />
+          <HeroCarousel onItemClick={handleItemClick} />
 
           {/* Content sections with container */}
           <div className="container mx-auto px-4 space-y-8">
             {/* Continue Watching Section */}
-            <ContinueWatching />
+              <ContinueWatching onItemClick={handleItemClick} />
 
             {/* Recommended Section */}
             <ContentCarousel title="Recomendado para ti" items={recommendedItems} onItemClick={handleItemClick} />
