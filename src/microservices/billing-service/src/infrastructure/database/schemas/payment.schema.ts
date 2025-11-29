@@ -1,52 +1,56 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, Schema as MongooseSchema } from "mongoose";
-
-export enum PaymentStatusEnum {
-  SUCCEEDED = "succeeded",
-  FAILED = "failed",
-  PENDING = "pending", // agregamos pending para uso inicial
-}
+import { Document } from "mongoose";
+import { PaymentStatus } from "../../../domain/entities/payment.entity";
 
 @Schema({ timestamps: true })
 export class PaymentDocument extends Document {
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   userId: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   subscriptionId: string;
 
   @Prop({ required: true })
   originalAmount: number;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ default: 0 })
   discountApplied: number;
 
   @Prop({ required: true })
   finalAmount: number;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ default: 0 })
   pointsRedeemed: number;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ default: 0 })
   pointsGained: number;
 
   @Prop({
-    enum: PaymentStatusEnum,
     required: true,
-    default: PaymentStatusEnum.PENDING,
-    index: true,
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
   })
-  status: PaymentStatusEnum;
+  status: PaymentStatus;
 
-  @Prop({ type: MongooseSchema.Types.Mixed, default: {} })
+  @Prop({ type: Object, default: {} })
   failureDetails: Record<string, any>;
 
-  @Prop()
+  // timestamps añadidos por mongoose → deben declararse manualmente
   createdAt: Date;
+  updatedAt: Date;
+
+  // Método de pago
+  @Prop()
+  cardLast4?: string;
 
   @Prop()
-  updatedAt: Date;
+  cardBrand?: string;
+
+  @Prop()
+  expiration?: string;
+
+  @Prop()
+  nameOnCard?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(PaymentDocument);
-PaymentSchema.index({ userId: 1, status: 1 });

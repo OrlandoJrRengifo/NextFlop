@@ -6,7 +6,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { PaymentDocument } from "../../infrastructure/database/schemas/payment.schema";
 import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto";
-import { JwtAuthGuard } from "../guards/jwt-auth.guard"; // Asumiendo que el guard existe en esta ruta
+import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 
 @ApiTags("Payments")
 @Controller()
@@ -18,24 +18,28 @@ export class PaymentsController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard) // Se protege el endpoint
-  @ApiBearerAuth()         // Se indica en Swagger que requiere autorización
   @ApiOperation({ summary: "Procesar un pago" })
   @ApiResponse({ status: 201, description: "Pago procesado correctamente" })
   async process(@Body() dto: ProcessPaymentDto, @Req() request: Request) {
-    const user = request.user as any; // Se extrae el usuario del token
-    
-    return this.processPaymentUseCase.execute(
-      user.userId, // Se usa el userId del token
-      dto.subscriptionId,
-      dto.originalAmount,
-      dto.pointsToRedeem ?? 0,
-    );
+    const user = request.user as any;
+
+    return this.processPaymentUseCase.execute({
+      userId: user.userId,
+      subscriptionId: dto.subscriptionId,
+      originalAmount: dto.originalAmount,
+      pointsToRedeem: dto.pointsToRedeem ?? 0,
+
+      // NUEVOS CAMPOS DEL MÉTODO DE PAGO
+      cardNumber: dto.cardNumber,
+      expiration: dto.expiration,
+      cvv: dto.cvv,
+      nameOnCard: dto.nameOnCard,
+    });
   }
 
   @Get()
   @ApiOperation({ summary: "Listar todos los pagos" })
-  @ApiQuery({ name: "userId", required: false, description: "Filtrar por ID de usuario" })
+  @ApiQuery({ name: "userId", required: false })
   @ApiResponse({ status: 200, description: "Lista de pagos" })
   async findAll(@Query("userId") userId?: string) {
     const filter = userId ? { userId } : {};

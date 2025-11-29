@@ -1,3 +1,5 @@
+// src/infrastructure/repositories/user.repository.ts
+
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -8,7 +10,8 @@ import { UserDocument } from "../database/schemas/user.schema";
 @Injectable()
 export class UserRepository implements IUserRepository {
   constructor(
-    @InjectModel(UserDocument.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(UserDocument.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
   async findById(id: string): Promise<User | null> {
@@ -21,15 +24,30 @@ export class UserRepository implements IUserRepository {
     return userDoc ? this.toDomain(userDoc) : null;
   }
 
-  async create(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const userDoc = new this.userModel(userData);
-    const savedUser = await userDoc.save();
-    return this.toDomain(savedUser);
+  /**
+   * Recibe una ENTIDAD User completa desde el UserFactory.
+   * Esto es DDD correcto.
+   */
+  async create(user: User): Promise<User> {
+    const payload = {
+      _id: user.id,                  // mantenemos el uuid generado en la Factory
+      fullName: user.fullName,
+      birthDate: user.birthDate ?? null,
+      email: user.email,
+      password: user.password,
+      currentPoints: user.currentPoints ?? 0,
+    };
+
+    const created = await new this.userModel(payload).save();
+    return this.toDomain(created);
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
-    const userDoc = await this.userModel.findByIdAndUpdate(id, userData, { new: true }).exec();
-    return userDoc ? this.toDomain(userDoc) : null;
+    const doc = await this.userModel
+      .findByIdAndUpdate(id, userData, { new: true })
+      .exec();
+
+    return doc ? this.toDomain(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -38,22 +56,27 @@ export class UserRepository implements IUserRepository {
   }
 
   async findAll(limit = 10, offset = 0): Promise<User[]> {
-    const userDocs = await this.userModel.find().skip(offset).limit(limit).exec();
-    return userDocs.map((doc) => this.toDomain(doc));
-  }
-  
-  // Helper para convertir el documento de Mongoose a la entidad de dominio
-  private toDomain(userDoc: UserDocument): User {
-    return new User(
-      userDoc._id.toString(),
-      userDoc.fullName,
-      userDoc.birthDate,
-      userDoc.email,
-      userDoc.password,
-      userDoc.currentPoints ?? 0,
-      userDoc.createdAt,
-      userDoc.updatedAt,
-    );
+    const docs = await this.userModel
+      .find()
+      .skip(offset)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return docs.map((doc) => this.toDomain(doc));
   }
 
+  // ---- Helper para convertir Mongoose → Entidad DDD ----
+  private toDomain(doc: UserDocument): User {
+    return new User(
+      doc._id.toString(),
+      doc.fullName,
+      doc.birthDate ?? null,
+      doc.email,
+      doc.password,
+      doc.currentPoints ?? 0,
+      doc.createdAt,
+      doc.updatedAt,
+    );
+  }
 }

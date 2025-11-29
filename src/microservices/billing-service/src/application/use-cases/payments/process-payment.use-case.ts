@@ -1,57 +1,73 @@
-import { Injectable, BadRequestException, Inject } from "@nestjs/common";
-import { IPaymentRepository, PAYMENT_REPOSITORY } from "../../../domain/repositories/payment.repository.interface";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import {
+  PAYMENT_REPOSITORY,
+  IPaymentRepository,
+} from "../../../domain/repositories/payment.repository.interface";
 import { Payment, PaymentStatus } from "../../../domain/entities/payment.entity";
-import { StripeService } from "../../../infrastructure/stripe/stripe.service";
-import { ExternalApiService } from "../../services/external-api.service";
 
 @Injectable()
 export class ProcessPaymentUseCase {
   constructor(
     @Inject(PAYMENT_REPOSITORY)
     private readonly paymentRepository: IPaymentRepository,
-    private readonly stripeService: StripeService,
-    private readonly externalApiService: ExternalApiService,
   ) {}
 
-  async execute(
-    userId: string,
-    subscriptionId: string,
-    originalAmount: number,
-    pointsToRedeem = 0,
-  ): Promise<Payment> {
-    let finalAmount = originalAmount;
-    if (pointsToRedeem > 0) {
-      finalAmount = Math.max(0, originalAmount - pointsToRedeem);
-    }
+  async execute(dto: {
+    userId: string;
+    subscriptionId: string;
+    originalAmount: number;
+    pointsToRedeem: number;
 
-    // No generamos UUID, dejamos que Mongo cree _id automáticamente
+    cardNumber: string;
+    expiration: string;
+    cvv: string;
+    nameOnCard: string;
+  }): Promise<Payment> {
+    const {
+      userId,
+      subscriptionId,
+      originalAmount,
+      pointsToRedeem,
+      cardNumber,
+      expiration,
+      nameOnCard,
+    } = dto;
+
+    const finalAmount = Math.max(0, originalAmount - (pointsToRedeem ?? 0));
+
+    const cardLast4 = cardNumber.slice(-4);
+    const cardBrand = this.detectBrand(cardNumber);
+
     const paymentEntity = new Payment(
-      undefined, // id opcional
+      undefined,
       userId,
       subscriptionId,
       originalAmount,
       finalAmount,
       pointsToRedeem,
-      0,                 // pointsGained
+      0,
       PaymentStatus.PENDING,
       undefined,
       new Date(),
       new Date(),
+      cardLast4,
+      cardBrand,
+      expiration,
+      nameOnCard,
     );
 
-    const payment = await this.paymentRepository.create(paymentEntity);
+    const saved = await this.paymentRepository.create(paymentEntity);
 
     try {
-      const pointsGained = 100; // ejemplo
-      const updated = await this.paymentRepository.update(payment.id, {
+      const updated = await this.paymentRepository.update(saved.id!, {
         status: PaymentStatus.SUCCEEDED,
-        pointsGained,
+        pointsGained: 100,
         updatedAt: new Date(),
       });
 
       return updated!;
     } catch (err: any) {
-      await this.paymentRepository.update(payment.id, {
+      await this.paymentRepository.update(saved.id!, {
         status: PaymentStatus.FAILED,
         failureDetails: { message: err.message },
         updatedAt: new Date(),
@@ -59,5 +75,13 @@ export class ProcessPaymentUseCase {
 
       throw new BadRequestException(`Payment failed: ${err.message}`);
     }
+  }
+
+  private detectBrand(cardNumber: string): string {
+    if (cardNumber.startsWith("4")) return "Visa";
+    if (cardNumber.startsWith("5")) return "Mastercard";
+    if (cardNumber.startsWith("34") || cardNumber.startsWith("37"))
+      return "American Express";
+    return "Unknown";
   }
 }

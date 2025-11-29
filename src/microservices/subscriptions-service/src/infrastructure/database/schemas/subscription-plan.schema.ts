@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
 @Schema({ timestamps: true })
-export class SubscriptionPlanDocument extends Document {
-  @Prop({ required: true, unique: true })
+export class SubscriptionPlan {
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
@@ -11,16 +11,17 @@ export class SubscriptionPlanDocument extends Document {
 
   @Prop({ required: true })
   maxProfiles: number;
-
-  // Se añaden para que TypeScript los reconozca
-  @Prop()
-  createdAt: Date;
-
-  @Prop()
-  updatedAt: Date;
 }
 
-export const SubscriptionPlanSchema = SchemaFactory.createForClass(SubscriptionPlanDocument);
+// Tipo correcto, incluyendo timestamps que Mongoose agrega automáticamente
+export type SubscriptionPlanDocument = Document & {
+  readonly _id: string;
+  readonly name: string;
+  readonly price: number;
+  readonly maxProfiles: number;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
 
-SubscriptionPlanSchema.index({ name: 1 });
-SubscriptionPlanSchema.index({ price: 1 });
+export const SubscriptionPlanSchema =
+  SchemaFactory.createForClass(SubscriptionPlan);

@@ -6,14 +6,15 @@ export class UserFactory {
     fullName: string,
     email: string,
     hashedPassword: string,
+    birthDate: Date,   // <-- ahora es Date, no string
   ): User {
     return new User(
       uuidv4(),
       fullName,
-      new Date(),  
+      birthDate,       // <-- ya viene convertido en el UseCase
       email,
       hashedPassword,
-      0,
+      0,               // currentPoints
       new Date(),
       new Date(),
     );

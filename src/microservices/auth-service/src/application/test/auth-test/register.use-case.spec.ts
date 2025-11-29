@@ -1,4 +1,5 @@
 // src/application/use-cases/auth-test/register.use-case.spec.ts
+
 import { ConflictException } from "@nestjs/common";
 import { RegisterUseCase } from "../../use-cases/auth/register.use-case";
 import * as bcrypt from "bcryptjs";
@@ -15,27 +16,42 @@ describe("RegisterUseCase", () => {
     const { userRepo, jwtService, userFactory } = makeMocks();
     userRepo.findByEmail.mockResolvedValue(null);
 
-    userFactory.createFromRegistration.mockImplementation((fullName, email, hashed) => ({
+    userFactory.createFromRegistration.mockImplementation(
+      (fullName, email, hashedPassword, birthDate) => ({
+        id: "u1",
+        fullName,
+        email,
+        birthDate,
+        password: hashedPassword,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+    );
+
+    userRepo.create.mockImplementation(async (u: any) => ({
+      ...u,
       id: "u1",
-      fullName,
-      email,
-      password: hashed,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }));
 
-    userRepo.create.mockImplementation(async (u: any) => ({ ...u, id: "u1" }));
-
-    const hashSpy = jest.spyOn(bcrypt as unknown as any, "hash")
+    const hashSpy = jest.spyOn(bcrypt as any, "hash");
     hashSpy.mockResolvedValue("hashed-pass");
+
     const uc = new RegisterUseCase(userRepo, jwtService, userFactory);
-    const result = await uc.execute("new@example.com", "pass123", "New User");
+
+    const result = await uc.execute({
+      email: "new@example.com",
+      password: "pass123",
+      fullName: "New User",
+      birthDate: "1990-01-01",
+    });
 
     expect(userRepo.findByEmail).toHaveBeenCalledWith("new@example.com");
+
     expect(userFactory.createFromRegistration).toHaveBeenCalledWith(
       "New User",
       "new@example.com",
-      expect.any(String)
+      "hashed-pass",
+      "1990-01-01"
     );
 
     expect(hashSpy).toHaveBeenCalledWith("pass123", 12);
@@ -48,8 +64,20 @@ describe("RegisterUseCase", () => {
 
   it("existing email throws ConflictException", async () => {
     const { userRepo, jwtService, userFactory } = makeMocks();
-    userRepo.findByEmail.mockResolvedValue({ id: "exists", email: "a@a.com" });
+    userRepo.findByEmail.mockResolvedValue({
+      id: "exists",
+      email: "a@a.com",
+    });
+
     const uc = new RegisterUseCase(userRepo, jwtService, userFactory);
-    await expect(uc.execute("a@a.com", "p", "Name")).rejects.toThrow(ConflictException);
+
+    await expect(
+      uc.execute({
+        email: "a@a.com",
+        password: "p",
+        fullName: "Name",
+        birthDate: "1990-01-01",
+      })
+    ).rejects.toThrow(ConflictException);
   });
 });

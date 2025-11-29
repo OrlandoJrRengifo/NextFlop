@@ -6,36 +6,45 @@ import { SubscriptionPlan } from "../../domain/entities/subscription-plan.entity
 import { SubscriptionPlanDocument } from "../database/schemas/subscription-plan.schema";
 
 @Injectable()
-export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
+export class SubscriptionPlanRepository
+  implements ISubscriptionPlanRepository
+{
   constructor(
-    @InjectModel(SubscriptionPlanDocument.name)
-    private planModel: Model<SubscriptionPlanDocument>,
+    @InjectModel("SubscriptionPlan")
+    private readonly planModel: Model<SubscriptionPlanDocument>,
   ) {}
 
   async findById(id: string): Promise<SubscriptionPlan | null> {
-    const planDoc = await this.planModel.findById(id).exec();
-    return planDoc ? this.toDomain(planDoc) : null;
+    const doc = await this.planModel.findById(id).exec();
+    return doc ? this.toDomain(doc) : null;
   }
 
   async findByName(name: string): Promise<SubscriptionPlan | null> {
-    const planDoc = await this.planModel.findOne({ name }).exec();
-    return planDoc ? this.toDomain(planDoc) : null;
+    const doc = await this.planModel.findOne({ name }).exec();
+    return doc ? this.toDomain(doc) : null;
   }
 
   async findAll(): Promise<SubscriptionPlan[]> {
-    const planDocs = await this.planModel.find().exec();
-    return planDocs.map((doc) => this.toDomain(doc));
+    const docs = await this.planModel.find().exec();
+    return docs.map((doc) => this.toDomain(doc));
   }
 
-  async create(planData: Omit<SubscriptionPlan, "id" | "createdAt" | "updatedAt">): Promise<SubscriptionPlan> {
-    const planDoc = new this.planModel(planData);
-    const savedPlan = await planDoc.save();
-    return this.toDomain(savedPlan);
+  async create(
+    planData: Omit<SubscriptionPlan, "id" | "createdAt" | "updatedAt">,
+  ): Promise<SubscriptionPlan> {
+    const created = new this.planModel(planData);
+    const saved = await created.save();
+    return this.toDomain(saved);
   }
 
-  async update(id: string, planData: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | null> {
-    const planDoc = await this.planModel.findByIdAndUpdate(id, planData, { new: true }).exec();
-    return planDoc ? this.toDomain(planDoc) : null;
+  async update(
+    id: string,
+    data: Partial<SubscriptionPlan>,
+  ): Promise<SubscriptionPlan | null> {
+    const updated = await this.planModel
+      .findByIdAndUpdate(id, data, { new: true })
+      .exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -43,15 +52,14 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
     return !!result;
   }
 
-  // Helper method to convert MongoDB document to domain entity
-  private toDomain(planDoc: SubscriptionPlanDocument): SubscriptionPlan {
+  private toDomain(doc: SubscriptionPlanDocument): SubscriptionPlan {
     return new SubscriptionPlan(
-      planDoc._id.toString(),
-      planDoc.name,
-      planDoc.price,
-      planDoc.maxProfiles,
-      planDoc.createdAt,
-      planDoc.updatedAt,
+      doc._id.toString(),
+      doc.name,
+      doc.price,
+      doc.maxProfiles,
+      doc.createdAt,
+      doc.updatedAt,
     );
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -11,71 +11,137 @@ import { Play, ArrowLeft } from 'lucide-react'
 import { RegistrationProgress } from '@/components/registration-progress'
 import { PlanCard } from '@/components/plan-card'
 
-type Plan = 'basic' | 'medium' | 'premium' | null
-
-const plans = [
+// ------------------------
+// 1. Base de features para cada plan
+// ------------------------
+const basePlans = [
   {
-    id: 'basic' as const,
-    name: 'Básico',
-    price: 9.99,
-    accentColor: 'primary' as const,
+    key: "basic",
+    accentColor: "primary",
     features: [
-      'Calidad HD',
-      '1 dispositivo a la vez',
-      'Catálogo completo',
-      '50 puntos por renovación'
+      "Calidad HD",
+      "{devices} dispositivo(s) a la vez",
+      "Catálogo completo",
+      "50 puntos por renovación"
     ]
   },
   {
-    id: 'medium' as const,
-    name: 'Medium',
-    price: 14.99,
-    accentColor: 'secondary' as const,
+    key: "medium",
+    accentColor: "secondary",
     features: [
-      'Calidad Full HD',
-      '2 dispositivos simultáneos',
-      'Catálogo completo',
-      'Descargas ilimitadas',
-      '100 puntos por renovación'
+      "Calidad Full HD",
+      "{devices} dispositivos simultáneos",
+      "Catálogo completo",
+      "Descargas ilimitadas",
+      "100 puntos por renovación"
     ]
   },
   {
-    id: 'premium' as const,
-    name: 'Premium',
-    price: 19.99,
-    accentColor: 'accent' as const,
+    key: "premium",
+    accentColor: "accent",
     features: [
-      'Calidad 4K Ultra HD',
-      '4 dispositivos simultáneos',
-      'Catálogo completo',
-      'Descargas ilimitadas',
-      'Audio Dolby Atmos',
-      '200 puntos por renovación'
+      "Calidad 4K Ultra HD",
+      "{devices} dispositivos simultáneos",
+      "Catálogo completo",
+      "Descargas ilimitadas",
+      "Audio Dolby Atmos",
+      "200 puntos por renovación"
     ]
   }
 ]
 
+// ------------------------
+// 2. Llamada a Onboarding
+// ------------------------
+async function completeOnboarding(body: any) {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const url = `${baseUrl}/api/onboarding/complete`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const error = await resp.json().catch(() => ({}));
+    throw new Error(error.message || "Error completing onboarding");
+  }
+
+  return resp.json();
+}
+
+// ------------------------
+// 3. Fetch de planes reales
+// ------------------------
+async function fetchPlans() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const url = `${baseUrl}/api/subscription-plans`;
+
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error("Error fetching subscription plans");
+
+  return resp.json();
+}
+
 export default function RegisterPage() {
   const router = useRouter()
+
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Step 1 data
+  // Datos Step 1
   const [fullName, setFullName] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  // Step 2 data
-  const [selectedPlan, setSelectedPlan] = useState<Plan>(null)
+  // Datos Step 2
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
-  // Step 3 data
+  // Datos Step 3
   const [cardNumber, setCardNumber] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
   const [cvv, setCvv] = useState('')
   const [cardName, setCardName] = useState('')
 
+  // ------------------------
+  // 4. Cargar planes desde backend
+  // ------------------------
+  const [apiPlans, setApiPlans] = useState<any[]>([]);
+  const [finalPlans, setFinalPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchPlans()
+      .then((plans) => {
+        setApiPlans(plans);
+
+        // Fusionar datos API con features base
+        const merged = plans.map((plan: any, idx: number) => {
+          const base = basePlans[idx];
+
+          return {
+            id: plan.id,
+            name: plan.name,
+            price: plan.price,
+            accentColor: base.accentColor,
+            features: base.features.map(f =>
+              f.replace("{devices}", plan.maxProfiles.toString())
+            )
+          };
+        });
+
+        setFinalPlans(merged);
+      })
+      .catch(console.error);
+  }, []);
+
+  // ------------------------
+  // 5. Step 1
+  // ------------------------
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password !== confirmPassword) {
@@ -85,6 +151,9 @@ export default function RegisterPage() {
     setStep(2)
   }
 
+  // ------------------------
+  // 6. Step 2
+  // ------------------------
   const handleStep2Submit = () => {
     if (!selectedPlan) {
       alert('Por favor selecciona un plan')
@@ -93,19 +162,49 @@ export default function RegisterPage() {
     setStep(3)
   }
 
+  // ------------------------
+  // 7. Step 3 - Completar onboarding
+  // ------------------------
   const handleStep3Submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
-    // Simular procesamiento de pago
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    console.log('[v0] Registration completed:', { email, selectedPlan })
-    
-    setIsLoading(false)
-    // router.push('/dashboard')
-    alert('¡Cuenta creada exitosamente! Serás redirigido al dashboard.')
-  }
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const body = {
+        user: {
+          email,
+          password,
+          fullName,
+          birthDate,
+        },
+        planId: selectedPlan!,
+        payment: {
+          cardNumber,
+          expiration: expiryDate,
+          cvv,
+          nameOnCard: cardName,
+          pointsToRedeem: 0,
+        },
+      };
+
+      console.log("Sending:", body);
+
+      const response = await completeOnboarding(body);
+
+      console.log("Success:", response);
+
+      localStorage.setItem("accessToken", response.accessToken);
+
+      alert("¡Cuenta creada exitosamente!");
+      router.push("/dashboard");
+
+    } catch (err: any) {
+      console.error("Onboarding error:", err);
+      alert(err.message || "Error al crear la cuenta");
+    }
+
+    setIsLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-background">
@@ -210,7 +309,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {plans.map((plan) => (
+            {finalPlans.map((plan) => (
               <PlanCard
                 key={plan.id}
                 name={plan.name}
@@ -352,14 +451,16 @@ export default function RegisterPage() {
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <p className="font-semibold text-lg">
-                                Plan {plans.find(p => p.id === selectedPlan)?.name}
+                                Plan {finalPlans.find(p => p.id === selectedPlan)?.name}
                               </p>
                               <p className="text-sm text-muted-foreground">Suscripción mensual</p>
                             </div>
+
                             <p className="text-2xl font-bold">
-                              ${plans.find(p => p.id === selectedPlan)?.price}
+                              ${finalPlans.find(p => p.id === selectedPlan)?.price}
                             </p>
                           </div>
+
                           <Button
                             variant="link"
                             className="p-0 h-auto text-primary"
@@ -375,7 +476,7 @@ export default function RegisterPage() {
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <p className="text-sm leading-relaxed">
                       <span className="font-semibold text-primary">Beneficio especial:</span>{' '}
-                      Comenzarás a acumular puntos desde tu primera renovación mensual. 
+                      Comenzarás a acumular puntos desde tu primera renovación mensual.
                       ¡Canjéalos por meses gratis y descuentos exclusivos!
                     </p>
                   </div>

@@ -6,9 +6,12 @@ import {
   SubscriptionPlanDocument,
   SubscriptionPlanSchema,
 } from "../../infrastructure/database/schemas/subscription-plan.schema";
+import { SubscriptionPlan } from "../../infrastructure/database/schemas/subscription-plan.schema";
+
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: SubscriptionPlanDocument.name, schema: SubscriptionPlanSchema }])],
+  imports: [MongooseModule.forFeature([{name: SubscriptionPlan.name, schema: SubscriptionPlanSchema }
+])],
   controllers: [PlansController],
   providers: [
     {

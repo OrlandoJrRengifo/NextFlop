@@ -6,7 +6,7 @@ export class UserDocument extends Document {
   @Prop({ required: true })
   fullName: string;
 
-  @Prop()
+  @Prop({ required: true })
   birthDate: Date;
 
   @Prop({ required: true, unique: true })
@@ -18,11 +18,12 @@ export class UserDocument extends Document {
   @Prop({ default: 0 })
   currentPoints: number;
 
-  @Prop()
+    @Prop()
   createdAt: Date;
 
   @Prop()
   updatedAt: Date;
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserDocument);

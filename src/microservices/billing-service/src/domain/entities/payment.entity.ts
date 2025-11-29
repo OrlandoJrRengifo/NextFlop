@@ -14,8 +14,14 @@ export class Payment {
     public pointsRedeemed: number,
     public pointsGained: number,
     public status: PaymentStatus,
-    public failureDetails?: Record<string, any>,
-    public createdAt?: Date,
-    public updatedAt?: Date,
+    public failureDetails: Record<string, any> | undefined,
+    public createdAt: Date,
+    public updatedAt: Date,
+
+    // --- Payment Method ---
+    public cardLast4?: string,
+    public cardBrand?: string,
+    public expiration?: string,
+    public nameOnCard?: string,
   ) {}
 }

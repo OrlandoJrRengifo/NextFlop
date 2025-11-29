@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsString, MinLength, MaxLength } from "class-validator";
+import { 
+  IsEmail, 
+  IsString, 
+  MinLength, 
+  MaxLength,
+  IsDateString 
+} from "class-validator";
 
 export class RegisterDto {
   @ApiProperty({ example: "user@example.com" })
@@ -15,4 +21,11 @@ export class RegisterDto {
   @IsString()
   @MaxLength(100)
   fullName: string;
+
+  @ApiProperty({
+    example: "1995-04-22",
+    description: "Fecha de nacimiento en formato ISO YYYY-MM-DD"
+  })
+  @IsDateString()
+  birthDate: string;        // ← NUEVO CAMPO
 }

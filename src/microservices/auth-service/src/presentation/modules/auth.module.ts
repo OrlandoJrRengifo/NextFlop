@@ -26,6 +26,9 @@ import { USER_REPOSITORY } from "../../domain/repositories/user.repository.inter
 import { JwtStrategy } from "../guards/jwt.strategy"
 import { JwtAuthGuard } from "../guards/jwt-auth.guard"
 
+import { OrchestrateOnboardingUseCase } from "../../application/use-cases/onboarding/orchestrate-onboarding.use-case";
+import { OnboardingController } from "../controllers/onboarding.controller";
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserDocument.name, schema: UserSchema }]),
@@ -36,7 +39,7 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard"
     }),
     RabbitMQModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, OnboardingController,],
   providers: [
     // Use Cases
     LoginUseCase,
@@ -47,6 +50,8 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard"
 
     // Services
     EventPublisher,
+
+    OrchestrateOnboardingUseCase,
 
     // Repositories
     {

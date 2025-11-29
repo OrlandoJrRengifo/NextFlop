@@ -6,7 +6,7 @@ import { PlanResponseDto } from "../dtos/plans/plan-response.dto";
 import { SubscriptionPlan } from "../../domain/entities/subscription-plan.entity";
 
 @ApiTags("Subscription Plans")
-@Controller()
+@Controller("plans")
 export class PlansController {
   constructor(
     @Inject("ISubscriptionPlanRepository")
@@ -17,7 +17,6 @@ export class PlansController {
   @ApiOperation({ summary: "Get all subscription plans" })
   @ApiResponse({ status: 200, description: "List of all plans", type: [PlanResponseDto] })
   async getAllPlans(): Promise<PlanResponseDto[]> {
-    // Se simplifica para usar el nuevo método findAll() sin parámetros
     const plans = await this.planRepository.findAll();
     return plans.map((plan) => this.toResponseDto(plan));
   }
@@ -34,9 +33,8 @@ export class PlansController {
   @ApiOperation({ summary: "Create a new subscription plan" })
   @ApiResponse({ status: 201, description: "Plan created", type: PlanResponseDto })
   async createPlan(@Body() createPlanDto: CreatePlanDto): Promise<PlanResponseDto> {
-    // Se llama al constructor simplificado de la entidad
     const planEntity = new SubscriptionPlan(
-      null, // id
+      null,
       createPlanDto.name,
       createPlanDto.price,
       createPlanDto.maxProfiles
@@ -46,11 +44,7 @@ export class PlansController {
     return this.toResponseDto(plan);
   }
 
-  // Los endpoints activate y deactivate se eliminan ya que el campo isActive no existe
-  // Tampoco el endpoint getActivePlans
-
   private toResponseDto(plan: SubscriptionPlan): PlanResponseDto {
-    // El DTO de respuesta también debe ser ajustado, pero por ahora mapeamos los campos existentes
     return {
       id: plan.id,
       name: plan.name,

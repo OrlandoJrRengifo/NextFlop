@@ -17,8 +17,7 @@ export class AuthController {
   @ApiOperation({ summary: "Register a new user" })
   @ApiResponse({ status: 201, description: "User registered successfully" })
   async register(@Body() registerDto: RegisterDto) {
-    const { email, password, fullName } = registerDto;
-    return this.registerUseCase.execute(email, password, fullName);
+    return this.registerUseCase.execute(registerDto);
   }
 
   @Post("login")

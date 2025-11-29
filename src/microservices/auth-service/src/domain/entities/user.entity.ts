@@ -6,8 +6,8 @@ export class User {
     public readonly email: string,
     public readonly password: string,
     public readonly currentPoints: number,
-    public readonly createdAt?: Date,
-    public readonly updatedAt?: Date,
+    public readonly createdAt: Date, 
+    public readonly updatedAt: Date, 
   ) {}
 
   public canSpendPoints(amount: number): boolean {

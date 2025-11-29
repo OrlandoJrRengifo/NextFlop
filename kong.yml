@@ -57,3 +57,12 @@ services:
         paths:
           - /api/media
         strip_path: true
+
+  # ⭐ ONBOARDING SERVICE
+  - name: onboarding-service
+    url: http://auth-service:3000   # si vive dentro del auth-service
+    routes:
+      - name: onboarding-routes
+        paths:
+          - /api/onboarding
+        strip_path: true
