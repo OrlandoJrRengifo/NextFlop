@@ -22,7 +22,7 @@ import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
     }),
   ],
   controllers: [SubscriptionsController],
-  providers: [SubscriptionsService, JwtStrategy, JwtAuthGuard],
+  providers: [SubscriptionsService, JwtAuthGuard],
   exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}
