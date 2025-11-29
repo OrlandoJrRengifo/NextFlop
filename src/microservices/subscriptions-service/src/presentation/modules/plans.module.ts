@@ -5,7 +5,9 @@ import { PlansService } from "../../application/services/plans.service";
 import { Plan, PlanSchema } from "../../domain/schemas/plan.schema";
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Plan.name, schema: PlanSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Plan.name, schema: PlanSchema }]),
+  ],
   controllers: [PlansController],
   providers: [PlansService],
   exports: [PlansService],

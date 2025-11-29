@@ -6,12 +6,15 @@ import { CreatePlanDto } from "../dto/create-plan.dto";
 @ApiTags("Subscription Plans")
 @Controller("api/subscriptions/plans")
 export class PlansController {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(private readonly plansService: PlansService) {
+    console.log("✅ PlansController initialized");
+  }
 
   @Get()
   @ApiOperation({ summary: "Get all subscription plans" })
   @ApiResponse({ status: 200, description: "List of all active plans" })
   async getAllPlans() {
+    console.log("📤 getAllPlans called");
     return this.plansService.findAll();
   }
 
