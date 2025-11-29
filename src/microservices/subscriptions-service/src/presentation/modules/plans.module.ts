@@ -1,24 +1,13 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { PlansController } from "../controllers/plans.controller";
-import { SubscriptionPlanRepository } from "../../infrastructure/repositories/subscription-plan.repository";
-import {
-  SubscriptionPlanDocument,
-  SubscriptionPlanSchema,
-} from "../../infrastructure/database/schemas/subscription-plan.schema";
-import { SubscriptionPlan } from "../../infrastructure/database/schemas/subscription-plan.schema";
-
+import { PlansService } from "../../application/services/plans.service";
+import { Plan, PlanSchema } from "../../domain/schemas/plan.schema";
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: SubscriptionPlan.name, schema: SubscriptionPlanSchema }
-])],
+  imports: [MongooseModule.forFeature([{ name: Plan.name, schema: PlanSchema }])],
   controllers: [PlansController],
-  providers: [
-    {
-      provide: "ISubscriptionPlanRepository", // Usamos el texto directamente
-      useClass: SubscriptionPlanRepository,
-    },
-  ],
-  exports: ["ISubscriptionPlanRepository"], // Usamos el texto directamente
+  providers: [PlansService],
+  exports: [PlansService],
 })
 export class PlansModule {}

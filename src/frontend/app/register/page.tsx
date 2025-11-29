@@ -78,7 +78,7 @@ async function completeOnboarding(body: any) {
 // ------------------------
 async function fetchPlans() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const url = `${baseUrl}/api/subscription-plans`;
+  const url = `${baseUrl}/api/subscriptions/plans`;
 
   const resp = await fetch(url);
   if (!resp.ok) throw new Error("Error fetching subscription plans");

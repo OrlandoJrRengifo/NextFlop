@@ -1,35 +1,23 @@
-import { Module } from "@nestjs/common"
-import { ConfigModule } from "@nestjs/config"
-import { HttpModule } from "@nestjs/axios"
-
-// Domain modules
-import { MediaModule } from "./presentation/modules/media.module"
-//import { SearchModule } from "./presentation/modules/search.module"
-
-// Infrastructure
-import { DatabaseModule } from "./infrastructure/database/database.module"
-import { RabbitMQModule } from "./infrastructure/messaging/rabbitmq.module"
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
     }),
-
-    // HTTP client for external services
-    HttpModule,
-
-    // Database connection
-    DatabaseModule,
-
-    // Messaging
-    RabbitMQModule,
-
-    // Feature modules
-    MediaModule,
-    //SearchModule,
+    MongooseModule.forRoot(process.env.MONGODB_URI || "mongodb://mongodb-media:27017/nextflop_media"),
+    PassportModule.register({ defaultStrategy: "jwt" }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || "your_jwt_secret_key",
+      signOptions: { expiresIn: "24h" },
+    }),
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

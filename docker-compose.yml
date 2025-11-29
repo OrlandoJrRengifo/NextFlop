@@ -61,20 +61,7 @@ services:
       - nextflop-network
 
   # RabbitMQ for async communication
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    container_name: nextflop-rabbitmq
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: password123
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - nextflop-network
+  # RabbitMQ removed — using direct HTTP between services via Kong
 
   # Auth-Users Service
   auth-service:
@@ -89,12 +76,10 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - MONGODB_URI=mongodb://admin:password123@mongodb-auth:27017/nextflop_auth?authSource=admin
-      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=24h
     depends_on:
       - mongodb-auth
-      - rabbitmq
     networks:
       - nextflop-network
 
@@ -111,12 +96,10 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - MONGODB_URI=mongodb://admin:password123@mongodb-subscriptions:27017/nextflop_subscriptions?authSource=admin
-      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3000
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
       - mongodb-subscriptions
-      - rabbitmq
       - auth-service
     networks:
       - nextflop-network
@@ -134,7 +117,6 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - MONGODB_URI=mongodb://admin:password123@mongodb-billing:27017/nextflop_billing?authSource=admin
-      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
       - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
       - AUTH_SERVICE_URL=http://auth-service:3000
@@ -142,7 +124,6 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
       - mongodb-billing
-      - rabbitmq
       - auth-service
       - subscriptions-service
     networks:
@@ -161,11 +142,9 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - MONGODB_URI=mongodb://admin:password123@mongodb-media:27017/nextflop_media?authSource=admin
-      - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3000
     depends_on:
       - mongodb-media
-      - rabbitmq
       - auth-service
     networks:
       - nextflop-network
@@ -220,7 +199,7 @@ volumes:
   mongodb_subscriptions_data:
   mongodb_billing_data:
   mongodb_media_data:
-  rabbitmq_data:
+  # rabbitmq_data removed
 
 networks:
   nextflop-network:

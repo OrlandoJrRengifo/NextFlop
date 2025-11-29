@@ -29,7 +29,7 @@ services:
       - name: auth-routes
         paths:
           - /api/auth
-        strip_path: true
+        strip_path: false
 
   # SUBSCRIPTIONS SERVICE
   - name: subscriptions-service
@@ -38,7 +38,7 @@ services:
       - name: subscriptions-routes
         paths:
           - /api/subscriptions
-        strip_path: true
+        strip_path: false
 
   # BILLING SERVICE
   - name: billing-service
@@ -47,7 +47,7 @@ services:
       - name: billing-routes
         paths:
           - /api/billing
-        strip_path: true
+        strip_path: false
 
   # MEDIA SERVICE
   - name: media-service
@@ -56,7 +56,7 @@ services:
       - name: media-routes
         paths:
           - /api/media
-        strip_path: true
+        strip_path: false
 
   # ⭐ ONBOARDING SERVICE
   - name: onboarding-service
@@ -65,4 +65,4 @@ services:
       - name: onboarding-routes
         paths:
           - /api/onboarding
-        strip_path: true
+        strip_path: false

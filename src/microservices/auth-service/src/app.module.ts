@@ -1,44 +1,15 @@
-import { Module } from "@nestjs/common"
-import { JwtModule } from "@nestjs/jwt"
-import { PassportModule } from "@nestjs/passport"
-import { ConfigModule } from "@nestjs/config"
-
-// Domain modules
-import { UsersModule } from "./presentation/modules/users.module"
-import { AuthModule } from "./presentation/modules/auth.module"
-import { ProfilesModule } from "./presentation/modules/profiles.module"
-
-// Infrastructure
-import { DatabaseModule } from "./infrastructure/database/database.module"
-import { RabbitMQModule } from "./infrastructure/messaging/rabbitmq.module"
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // Configuration
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ".env",
-    }),
-
-    // Database connection
-    DatabaseModule,
-
-    // Messaging
-    RabbitMQModule,
-
-    // JWT configuration
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || "your-super-secret-jwt-key",
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || "24h" },
-    }),
-
-    // Passport
-    PassportModule,
-
-    // Feature modules
-    AuthModule,
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://mongodb-auth:27017/nextflop_auth?authSource=admin'),
     UsersModule,
-    ProfilesModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

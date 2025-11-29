@@ -62,9 +62,9 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     try {
       const messageBuffer = Buffer.from(JSON.stringify(message));
       await this.channelWrapper.publish("nextflop.events", routingKey, messageBuffer, {
-        persistent: true,
+        contentType: "application/json",
         timestamp: Date.now(),
-      });
+      } as any);
 
       console.log(`📤 Published event: ${routingKey}`);
     } catch (error) {

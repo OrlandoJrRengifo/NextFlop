@@ -1,39 +1,27 @@
-import { Module } from "@nestjs/common"
-import { ConfigModule } from "@nestjs/config"
-import { ScheduleModule } from "@nestjs/schedule"
-
-// Domain modules
-import { SubscriptionsModule } from "./presentation/modules/subscriptions.module"
-import { PlansModule } from "./presentation/modules/plans.module"
-
-// Infrastructure
-import { DatabaseModule } from "./infrastructure/database/database.module"
-import { RabbitMQModule } from "./infrastructure/messaging/rabbitmq.module"
-import { HttpModule } from "@nestjs/axios"
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
+import { SubscriptionsModule } from "./presentation/modules/subscriptions.module";
+import { PlansModule } from "./presentation/modules/plans.module";
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
     }),
-
-    // Schedule for cron jobs
-    ScheduleModule.forRoot(),
-
-    // HTTP client for external services
-    HttpModule,
-
-    // Database connection
-    DatabaseModule,
-
-    // Messaging
-    RabbitMQModule,
-
-    // Feature modules
+    MongooseModule.forRoot(process.env.MONGODB_URI || "mongodb://mongodb-subscriptions:27017/nextflop-subscriptions"),
+    PassportModule.register({ defaultStrategy: "jwt" }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || "your_jwt_secret_key",
+      signOptions: { expiresIn: "24h" },
+    }),
     SubscriptionsModule,
     PlansModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

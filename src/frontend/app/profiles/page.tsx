@@ -1,24 +1,38 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Play, Plus, Settings } from 'lucide-react'
-
-// Mock profile data
-const mockProfiles = [
-  { id: '1', name: 'Juan', icon: '👨' },
-  { id: '2', name: 'María', icon: '👩' },
-  { id: '3', name: 'Kids', icon: '🧒' }
-]
+import { apiAuthFetch, getAuthToken } from '@/services/api'
 
 export default function ProfilesPage() {
   const router = useRouter()
-  const [profiles] = useState(mockProfiles)
+  const [profiles, setProfiles] = useState<Array<any>>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!getAuthToken()) {
+      router.push('/login')
+      return
+    }
+
+    const load = async () => {
+      try {
+        const data = await apiAuthFetch('/api/users/profiles')
+        setProfiles(data || [])
+      } catch (err) {
+        console.error('Failed to load profiles', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [router])
 
   const handleProfileClick = (profileId: string) => {
-    // Store selected profile in localStorage or state management
     localStorage.setItem('selectedProfile', profileId)
     router.push('/home')
   }
@@ -38,20 +52,24 @@ export default function ProfilesPage() {
 
       {/* Profiles Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        {profiles.map((profile) => (
-          <button
-            key={profile.id}
-            onClick={() => handleProfileClick(profile.id)}
-            className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:scale-105 transition-transform"
-          >
-            <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-border group-hover:border-primary flex items-center justify-center text-5xl transition-all">
-              {profile.icon}
-            </div>
-            <span className="text-lg font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              {profile.name}
-            </span>
-          </button>
-        ))}
+        {loading ? (
+          <div className="col-span-2 md:col-span-4 text-center">Cargando perfiles...</div>
+        ) : (
+          profiles.map((profile: any) => (
+            <button
+              key={profile.id}
+              onClick={() => handleProfileClick(profile.id)}
+              className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:scale-105 transition-transform"
+            >
+              <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-border group-hover:border-primary flex items-center justify-center text-5xl transition-all">
+                {profile.icon || '👤'}
+              </div>
+              <span className="text-lg font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                {profile.name}
+              </span>
+            </button>
+          ))
+        )}
 
         {/* Add Profile Button */}
         <button

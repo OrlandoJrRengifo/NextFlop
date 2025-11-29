@@ -1,38 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Heart, Trash2, Play } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-
-// Mock data
-const mockFavorites = [
-  { id: '1', title: 'Acción Extrema', image: '/action-movie.png', addedDate: '2025-01-15', rating: 4.8 },
-  { id: '2', title: 'Drama Intenso', image: '/intense-drama-scene.png', addedDate: '2025-01-14', rating: 4.5 },
-  { id: '3', title: 'Comedia Romántica', image: '/romantic-comedy.jpg', addedDate: '2025-01-13', rating: 4.2 },
-  { id: '4', title: 'Thriller Psicológico', image: '/psychological-thriller.jpg', addedDate: '2025-01-12', rating: 4.7 },
-  { id: '5', title: 'Sci-Fi Épico', image: '/epic-sci-fi.jpg', addedDate: '2025-01-10', rating: 4.9 },
-  { id: '6', title: 'Terror Nocturno', image: '/horror-movie.png', addedDate: '2025-01-08', rating: 4.3 },
-  { id: '7', title: 'Aventura Fantástica', image: '/epic-movie-scene.jpg', addedDate: '2025-01-05', rating: 4.6 },
-  { id: '8', title: 'Romance Histórico', image: '/dramatic-tv-series.png', addedDate: '2025-01-03', rating: 4.4 },
-]
+import { apiAuthFetch, getAuthToken } from '@/services/api'
 
 export default function FavoritesPage() {
-  const [items, setItems] = useState(mockFavorites)
+  const [items, setItems] = useState<Array<any>>([])
+  const [loading, setLoading] = useState(true)
   const [showPopup, setShowPopup] = useState(false)
   const [popupMessage, setPopupMessage] = useState('')
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [itemToRemove, setItemToRemove] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!getAuthToken()) return
+
+    const load = async () => {
+      try {
+        const user = await apiAuthFetch('/api/users/me')
+        // user.favorites expected to be array of ids (e.g. tmdb:12345)
+        const favs = (user?.favorites || []).map((id: string) => ({ id, title: id, image: '/placeholder.svg', addedDate: new Date().toISOString(), rating: 0 }))
+        setItems(favs)
+      } catch (err) {
+        console.error('Failed to load favorites', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [])
 
   const handleRemove = (id: string) => {
     setItemToRemove(id)
     setShowConfirmDialog(true)
   }
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (itemToRemove) {
+      try {
+        await apiAuthFetch(`/api/users/favorites`, { method: 'DELETE', body: JSON.stringify({ movieId: itemToRemove }) })
+      } catch (err) {
+        console.error('Failed to remove favorite', err)
+      }
+
       setItems(items.filter(item => item.id !== itemToRemove))
       setPopupMessage('Eliminado de Favoritos')
       setShowPopup(true)
@@ -57,7 +72,9 @@ export default function FavoritesPage() {
             </div>
           </div>
 
-          {items.length === 0 ? (
+          {loading ? (
+            <div className="py-20 text-center">Cargando favoritos...</div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Heart className="h-16 w-16 text-muted-foreground mb-4" />
               <h2 className="text-2xl font-bold mb-2">No tienes favoritos</h2>

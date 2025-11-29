@@ -1,49 +1,28 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import { SubscriptionsController } from "../controllers/subscriptions.controller";
-import { CreateSubscriptionUseCase } from "../../application/use-cases/subscriptions/create-subscription.use-case";
-import { CancelSubscriptionUseCase } from "../../application/use-cases/subscriptions/cancel-subscription.use-case";
-import { RenewSubscriptionUseCase } from "../../application/use-cases/subscriptions/renew-subscription.use-case";
-import { EventPublisher } from "../../application/services/event-publisher.service";
-import { SubscriptionSchedulerService } from "../../application/services/subscription-scheduler.service";
-import { SubscriptionRepository } from "../../infrastructure/repositories/subscription.repository";
-import { SubscriptionPlanRepository } from "../../infrastructure/repositories/subscription-plan.repository";
-import { SubscriptionDocument, SubscriptionSchema } from "../../infrastructure/database/schemas/subscription.schema";
-import { AssignPlanUseCase } from "../../application/use-cases/subscriptions/assign-plan.use-case";
-import { SubscriptionPlan } from "../../infrastructure/database/schemas/subscription-plan.schema";
-import {
-  SubscriptionPlanDocument,
-  SubscriptionPlanSchema,
-} from "../../infrastructure/database/schemas/subscription-plan.schema";
-import { RabbitMQModule } from "../../infrastructure/messaging/rabbitmq.module";
+import { SubscriptionsService } from "../../application/services/subscriptions.service";
+import { Subscription, SubscriptionSchema } from "../../domain/schemas/subscription.schema";
+import { JwtStrategy } from "../../auth/jwt.strategy";
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: SubscriptionDocument.name, schema: SubscriptionSchema },
-      { name: SubscriptionPlan.name, schema: SubscriptionPlanSchema },
-    ]),
-    // Se eliminan PassportModule y JwtModule
-    RabbitMQModule,
+    MongooseModule.forFeature([{ name: Subscription.name, schema: SubscriptionSchema }]),
+    PassportModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>("JWT_SECRET") || "your_jwt_secret_key",
+        signOptions: { expiresIn: "24h" },
+      }),
+    }),
   ],
   controllers: [SubscriptionsController],
-  providers: [
-    CreateSubscriptionUseCase,
-    CancelSubscriptionUseCase,
-    RenewSubscriptionUseCase,
-    EventPublisher,
-    SubscriptionSchedulerService,
-    AssignPlanUseCase,
-    {
-      provide: "ISubscriptionRepository",
-      useClass: SubscriptionRepository,
-    },
-    {
-      provide: "ISubscriptionPlanRepository",
-      useClass: SubscriptionPlanRepository,
-    },
-    // Se eliminan JwtAuthGuard y JwtStrategy
-  ],
-  exports: ["ISubscriptionRepository", "ISubscriptionPlanRepository", AssignPlanUseCase],
+  providers: [SubscriptionsService, JwtStrategy, JwtAuthGuard],
+  exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}

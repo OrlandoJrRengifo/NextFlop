@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Heart, Clock, Play, Info } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
+import { apiAuthFetch, getAuthToken } from '@/services/api'
 
 interface ContentCarouselProps {
   title: string
@@ -33,20 +34,40 @@ export function ContentCarousel({ title, items, onItemClick }: ContentCarouselPr
     }
   }
 
-  const handleAddToFavorites = (e: React.MouseEvent, itemTitle: string) => {
+  const handleAddToFavorites = async (e: React.MouseEvent, itemTitle: string, itemId?: string) => {
     e.stopPropagation()
-    setPopupMessage(`"${itemTitle}" agregado a Favoritos`)
-    setPopupIcon('heart')
-    setShowPopup(true)
-    setTimeout(() => setShowPopup(false), 3000)
+    try {
+      if (!getAuthToken()) throw new Error('Not authenticated')
+      await apiAuthFetch('/api/users/favorites', { method: 'POST', body: JSON.stringify({ movieId: itemId || itemTitle }) })
+      setPopupMessage(`"${itemTitle}" agregado a Favoritos`)
+      setPopupIcon('heart')
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
+    } catch (err) {
+      console.error('Failed to add favorite', err)
+      setPopupMessage('Necesitas iniciar sesión para añadir favoritos')
+      setPopupIcon('heart')
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
+    }
   }
 
-  const handleAddToWatchLater = (e: React.MouseEvent, itemTitle: string) => {
+  const handleAddToWatchLater = async (e: React.MouseEvent, itemTitle: string, itemId?: string) => {
     e.stopPropagation()
-    setPopupMessage(`"${itemTitle}" agregado a Ver más tarde`)
-    setPopupIcon('clock')
-    setShowPopup(true)
-    setTimeout(() => setShowPopup(false), 3000)
+    try {
+      if (!getAuthToken()) throw new Error('Not authenticated')
+      await apiAuthFetch('/api/users/watchlist', { method: 'POST', body: JSON.stringify({ movieId: itemId || itemTitle }) })
+      setPopupMessage(`"${itemTitle}" agregado a Ver más tarde`)
+      setPopupIcon('clock')
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
+    } catch (err) {
+      console.error('Failed to add to watchlist', err)
+      setPopupMessage('Necesitas iniciar sesión para añadir a ver más tarde')
+      setPopupIcon('clock')
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
+    }
   }
 
   return (
@@ -107,7 +128,7 @@ export function ContentCarousel({ title, items, onItemClick }: ContentCarouselPr
                         size="icon" 
                         variant="outline" 
                         className="h-9 w-9 rounded-full bg-transparent border-white hover:bg-white/20"
-                        onClick={(e) => handleAddToFavorites(e, item.title)}
+                        onClick={(e) => handleAddToFavorites(e, item.title, item.id)}
                       >
                         <Heart className="h-4 w-4" />
                       </Button>
@@ -115,7 +136,7 @@ export function ContentCarousel({ title, items, onItemClick }: ContentCarouselPr
                         size="icon" 
                         variant="outline" 
                         className="h-9 w-9 rounded-full bg-transparent border-white hover:bg-white/20"
-                        onClick={(e) => handleAddToWatchLater(e, item.title)}
+                        onClick={(e) => handleAddToWatchLater(e, item.title, item.id)}
                       >
                         <Clock className="h-4 w-4" />
                       </Button>

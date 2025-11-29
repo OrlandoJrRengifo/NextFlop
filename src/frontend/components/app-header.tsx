@@ -11,22 +11,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { getAuthToken, apiAuthFetch } from '@/services/api'
 
 export function AppHeader() {
   const [profileIcon, setProfileIcon] = useState('👨')
 
   useEffect(() => {
-    // Get profile icon from localStorage
-    const profiles = [
-      { id: '1', icon: '👨' },
-      { id: '2', icon: '👩' },
-      { id: '3', icon: '🧒' }
-    ]
     const selectedProfileId = localStorage.getItem('selectedProfile')
-    const profile = profiles.find(p => p.id === selectedProfileId)
-    if (profile) {
-      setProfileIcon(profile.icon)
+
+    if (!selectedProfileId) return
+
+    const load = async () => {
+      try {
+        if (!getAuthToken()) return
+        const profiles = await apiAuthFetch('/api/users/profiles')
+        const profile = (profiles || []).find((p: any) => p.id === selectedProfileId)
+        if (profile) setProfileIcon(profile.icon || '👤')
+      } catch (err) {
+        console.error('Failed to load profiles for header', err)
+      }
     }
+
+    load()
   }, [])
 
   return (
