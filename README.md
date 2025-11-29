@@ -135,3 +135,5 @@ npm run test:e2e
 3. Commit los cambios (`git commit -am 'Agregar nueva funcionalidad'`)
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Crear un Pull Request
+
+## boffffffff
