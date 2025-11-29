@@ -1,6 +1,27 @@
 _format_version: "3.0"
 
+plugins:
+  - name: cors
+    config:
+      origins:
+        - http://localhost:3000
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Authorization
+        - Content-Type
+      exposed_headers:
+        - Authorization
+      credentials: true
+      max_age: 3600
+
 services:
+
   # AUTH SERVICE
   - name: auth-service
     url: http://auth-service:3000
@@ -8,8 +29,6 @@ services:
       - name: auth-routes
         paths:
           - /api/auth
-          - /api/users
-          - /api/profiles
         strip_path: true
 
   # SUBSCRIPTIONS SERVICE
@@ -19,7 +38,6 @@ services:
       - name: subscriptions-routes
         paths:
           - /api/subscriptions
-          - /api/plans
         strip_path: true
 
   # BILLING SERVICE
@@ -28,8 +46,7 @@ services:
     routes:
       - name: billing-routes
         paths:
-          - /api/payments
-          - /api/webhooks
+          - /api/billing
         strip_path: true
 
   # MEDIA SERVICE
@@ -39,6 +56,4 @@ services:
       - name: media-routes
         paths:
           - /api/media
-          - /api/genres
-          - /api/search
         strip_path: true

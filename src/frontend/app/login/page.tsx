@@ -9,24 +9,50 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Play } from 'lucide-react'
 
+// Importamos el cliente de API real
+import { apiFetch, setAuthToken } from '@/services/api'
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Simular autenticación
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Aquí iría la lógica real de autenticación
-    console.log('[v0] Login attempt:', { email })
-    
+    setErrorMessage(null)
+
+    try {
+      // Llamada real al backend vía Kong
+      const data = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      })
+
+      console.log("[NextFlop] Login exitoso:", data)
+
+      // Guardar token JWT en el navegador
+      if (data?.token) setAuthToken(data.token)
+
+      // Redirigir al home o dashboard
+      router.push('/home')
+
+    } catch (error: any) {
+      console.error("[NextFlop] Error de login:", error)
+      console.error("[NextFlop] Error de login:", error.status, error.info);
+
+
+      const backendMsg =
+        typeof error.info === 'object' && error.info?.message
+          ? error.info.message
+          : 'Credenciales incorrectas o error del servidor'
+
+      setErrorMessage(backendMsg)
+    }
+
     setIsLoading(false)
-    // router.push('/dashboard')
   }
 
   return (
@@ -49,6 +75,12 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* Error del backend */}
+            {errorMessage && (
+              <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Correo electrónico

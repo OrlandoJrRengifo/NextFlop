@@ -6,7 +6,7 @@ import { PlanResponseDto } from "../dtos/plans/plan-response.dto";
 import { SubscriptionPlan } from "../../domain/entities/subscription-plan.entity";
 
 @ApiTags("Subscription Plans")
-@Controller("plans")
+@Controller()
 export class PlansController {
   constructor(
     @Inject("ISubscriptionPlanRepository")

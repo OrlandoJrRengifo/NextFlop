@@ -12,7 +12,7 @@ import { SubscriptionResponseDto } from "../dtos/subscriptions/subscription-resp
 import { Subscription } from "../../domain/entities/subscription.entity";
 
 @ApiTags("Subscriptions")
-@Controller("subscriptions")
+@Controller()
 @UseGuards(JwtAuthGuard)      // Reactivado
 @ApiBearerAuth("JWT-auth")  // Reactivado
 export class SubscriptionsController {

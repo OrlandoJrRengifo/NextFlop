@@ -7,7 +7,7 @@ import type { MediaSearchDto } from "../../application/dto/search.dto"
 import { JwtAuthGuard } from "../guards/jwt-auth.guard"
 
 @ApiTags("search")
-@Controller("search")
+@Controller()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class SearchController {

@@ -9,7 +9,7 @@ import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard"; // Asumiendo que el guard existe en esta ruta
 
 @ApiTags("Payments")
-@Controller("payments")
+@Controller()
 export class PaymentsController {
   constructor(
     private readonly processPaymentUseCase: ProcessPaymentUseCase,

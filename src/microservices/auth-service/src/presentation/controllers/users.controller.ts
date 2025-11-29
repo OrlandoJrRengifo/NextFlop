@@ -9,7 +9,7 @@ import { UpdateUserDto } from "../dtos/auth/update-user.dto";
 import { AddPointsDto } from "../dtos/auth/add-points.dto";
 
 @ApiTags("users")
-@Controller("users")
+@Controller()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UsersController {
