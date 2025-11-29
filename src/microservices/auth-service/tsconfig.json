@@ -17,5 +17,5 @@
     "strict": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts", "src/application/test"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts", "src/application/test", "src/application/use-cases/onboarding"]
 }

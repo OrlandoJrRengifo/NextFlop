@@ -1,33 +1,31 @@
-import { Module } from "@nestjs/common"
-import { JwtModule } from "@nestjs/jwt"
-import { PassportModule } from "@nestjs/passport"
-import { MongooseModule } from "@nestjs/mongoose"
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { MongooseModule } from "@nestjs/mongoose";
 
 // Controllers
-import { AuthController } from "../controllers/auth.controller"
+import { AuthController } from "../controllers/auth.controller";
+import { OnboardingController } from "../controllers/onboarding.controller";
 
 // Use Cases
-import { LoginUseCase } from "../../application/use-cases/auth/login.use-case"
-import { RegisterUseCase } from "../../application/use-cases/auth/register.use-case"
+import { LoginUseCase } from "../../application/use-cases/auth/login.use-case";
+import { RegisterUseCase } from "../../application/use-cases/auth/register.use-case";
 
 // Factories and Services
-import { UserFactory } from "../../application/factories/user.factory"
-import { EventPublisher } from "../../application/services/event-publisher.service"
+import { UserFactory } from "../../application/factories/user.factory";
+import { EventPublisher } from "../../application/services/event-publisher.service";
+import { AuthService } from "../../auth/auth.service";
 
 // Infrastructure
-import { UserRepository } from "../../infrastructure/repositories/user.repository"
-import { UserDocument, UserSchema } from "../../infrastructure/database/schemas/user.schema"
-import { RabbitMQModule } from "../../infrastructure/messaging/rabbitmq.module"
+import { UserRepository } from "../../infrastructure/repositories/user.repository";
+import { UserDocument, UserSchema } from "../../infrastructure/database/schemas/user.schema";
 
 // Interfaces
 import { USER_REPOSITORY } from "../../domain/repositories/user.repository.interface";
 
 // Guards and Strategies
-import { JwtStrategy } from "../guards/jwt.strategy"
-import { JwtAuthGuard } from "../guards/jwt-auth.guard"
-
-import { OrchestrateOnboardingUseCase } from "../../application/use-cases/onboarding/orchestrate-onboarding.use-case";
-import { OnboardingController } from "../controllers/onboarding.controller";
+import { JwtStrategy } from "../guards/jwt.strategy";
+import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 
 @Module({
   imports: [
@@ -37,9 +35,8 @@ import { OnboardingController } from "../controllers/onboarding.controller";
       secret: process.env.JWT_SECRET || "your-super-secret-jwt-key",
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || "24h" },
     }),
-    RabbitMQModule,
   ],
-  controllers: [AuthController, OnboardingController,],
+  controllers: [AuthController, OnboardingController],
   providers: [
     // Use Cases
     LoginUseCase,
@@ -50,8 +47,7 @@ import { OnboardingController } from "../controllers/onboarding.controller";
 
     // Services
     EventPublisher,
-
-    OrchestrateOnboardingUseCase,
+    AuthService,
 
     // Repositories
     {

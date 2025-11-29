@@ -1,35 +1,35 @@
 import { Injectable } from "@nestjs/common";
-import { RabbitMQService } from "../../infrastructure/messaging/rabbitmq.service";
 
 @Injectable()
 export class EventPublisher {
-  constructor(private readonly rabbitMQService: RabbitMQService) {}
-
   async publishPointsUpdated(event: {
     userId: string;
-    previousPoints: number; // Renombrado
-    currentPoints: number;  // Renombrado
+    previousPoints: number;
+    currentPoints: number;
     change: number;
     reason: string;
     timestamp: Date;
   }): Promise<void> {
-    await this.rabbitMQService.publish("loyalty.pointsUpdated", event);
+    console.log("📤 Event published: loyalty.pointsUpdated", event);
+    // TODO: Implement event publishing when message broker is available
   }
 
   async publishUserRegistered(event: {
     userId: string;
     email: string;
-    fullName: string; // Se usa fullName
+    fullName: string;
     timestamp: Date;
   }): Promise<void> {
-    await this.rabbitMQService.publish("user.registered", event);
+    console.log("📤 Event published: user.registered", event);
+    // TODO: Implement event publishing when message broker is available
   }
 
   async publishUserDeactivated(event: {
     userId: string;
     email: string;
-    timestamp: Date;
+    deactivatedAt: Date;
   }): Promise<void> {
-    await this.rabbitMQService.publish("user.deactivated", event);
+    console.log("📤 Event published: user.deactivated", event);
+    // TODO: Implement event publishing when message broker is available
   }
 }

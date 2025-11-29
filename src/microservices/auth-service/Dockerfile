@@ -1,11 +1,3 @@
-FROM node:20-alpine
-WORKDIR /usr/src/app
-COPY package.json package-lock.json* ./
-RUN npm install --production=false
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["node", "dist/main.js"]
 FROM node:20-slim
 
 WORKDIR /app
@@ -14,7 +6,6 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-#RUN npm ci
 RUN npm install --legacy-peer-deps
 
 # Copy source code
