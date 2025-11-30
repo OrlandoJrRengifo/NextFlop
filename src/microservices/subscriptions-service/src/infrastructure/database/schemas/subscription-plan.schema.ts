@@ -13,7 +13,6 @@ export class SubscriptionPlan {
   maxProfiles: number;
 }
 
-// Tipo correcto, incluyendo timestamps que Mongoose agrega automáticamente
 export type SubscriptionPlanDocument = Document & {
   readonly _id: string;
   readonly name: string;

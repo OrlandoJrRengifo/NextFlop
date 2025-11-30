@@ -32,8 +32,9 @@ import { HttpModule } from "@nestjs/axios"
     RabbitMQModule,
 
     // Feature modules
-    SubscriptionsModule,
+    // IMPORTANTE: PlansModule primero por seguridad de ruteo
     PlansModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}

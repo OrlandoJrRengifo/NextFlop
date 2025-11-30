@@ -18,9 +18,8 @@ import { AssignPlanDto } from "../dtos/subscriptions/assign-plan.dto";
 import { SubscriptionResponseDto } from "../dtos/subscriptions/subscription-response.dto";
 import { Subscription } from "../../domain/entities/subscription.entity";
 
-
 @ApiTags("Subscriptions")
-@Controller()
+@Controller("subscriptions") 
 export class SubscriptionsController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
@@ -32,9 +31,6 @@ export class SubscriptionsController {
     private readonly subscriptionRepository: ISubscriptionRepository,
   ) { }
 
-  // ============================================================
-  // 🆕 NUEVO ENDPOINT: ASIGNAR PLAN (PASO 2)
-  // ============================================================
   @Post("assign")
   @ApiOperation({ summary: "Assign a plan to the authenticated user" })
   @ApiResponse({
@@ -55,10 +51,6 @@ export class SubscriptionsController {
 
     return this.toResponseDto(subscription);
   }
-
-  // ============================================================
-  // YA EXISTENTES (se dejan tal cual)
-  // ============================================================
 
   @Post()
   @ApiOperation({ summary: "Create a new subscription" })
@@ -110,9 +102,6 @@ export class SubscriptionsController {
     return subscription ? this.toResponseDto(subscription) : null;
   }
 
-  // ============================================================
-  // MAPPER
-  // ============================================================
   private toResponseDto(subscription: Subscription): SubscriptionResponseDto {
     return {
       id: subscription.id,

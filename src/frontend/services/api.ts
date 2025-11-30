@@ -1,5 +1,3 @@
-// src/frontend/services/api.ts
-
 // URL base del backend (Kong como API Gateway)
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== ""
@@ -66,7 +64,7 @@ export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // 👉 Se asegura que los paths siempre empiecen con "/"
+  // Se asegura que los paths siempre empiecen con "/"
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   const url = `${API_URL}${normalizedPath}`;
