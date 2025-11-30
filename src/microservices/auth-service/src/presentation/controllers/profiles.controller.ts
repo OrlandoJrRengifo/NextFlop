@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Param, UseGuards, Body } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Param, UseGuards, Body, Req } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateProfileUseCase } from "../../application/use-cases/profiles/create-profile.use-case";
 import { GetProfileUseCase } from "../../application/use-cases/profiles/get-profile.use-case";
+import { ListProfilesUseCase } from "../../application/use-cases/profiles/list-profiles.use-case";
 import { UpdateProfileUseCase } from "../../application/use-cases/profiles/update-profile.use-case";
 import { AddToListUseCase } from "../../application/use-cases/profiles/add-to-list.use-case";
 import { RemoveFromListUseCase } from "../../application/use-cases/profiles/remove-from-list.use-case";
@@ -19,6 +20,7 @@ export class ProfilesController {
   constructor(
     private readonly createProfileUseCase: CreateProfileUseCase,
     private readonly getProfileUseCase: GetProfileUseCase,
+    private readonly listProfilesUseCase: ListProfilesUseCase,
     private readonly updateProfileUseCase: UpdateProfileUseCase,
     private readonly addToListUseCase: AddToListUseCase,
     private readonly removeFromListUseCase: RemoveFromListUseCase,
@@ -28,8 +30,19 @@ export class ProfilesController {
   @Post()
   @ApiOperation({ summary: "Crear un perfil asociado a un usuario" })
   @ApiResponse({ status: 201, description: "Perfil creado exitosamente" })
-  async create(@Body() dto: CreateProfileDto) {
+  async create(@Req() req: any, @Body() dto: CreateProfileDto) {
+    // Ensure the profile is created for the authenticated user
+    const userId = req.user?.userId;
+    dto.userId = userId;
     return this.createProfileUseCase.execute(dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List profiles for authenticated user' })
+  @ApiResponse({ status: 200, description: 'Profiles fetched successfully' })
+  async listProfiles(@Req() req: any) {
+    const userId = req.user?.userId;
+    return this.listProfilesUseCase.execute(userId);
   }
 
   @Get(':id')

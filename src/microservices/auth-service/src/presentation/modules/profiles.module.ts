@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { ProfilesController } from "../controllers/profiles.controller";
 import { CreateProfileUseCase } from "../../application/use-cases/profiles/create-profile.use-case";
 import { GetProfileUseCase } from "../../application/use-cases/profiles/get-profile.use-case";
+import { ListProfilesUseCase } from "../../application/use-cases/profiles/list-profiles.use-case";
 import { UpdateProfileUseCase } from "../../application/use-cases/profiles/update-profile.use-case";
 import { AddToListUseCase } from "../../application/use-cases/profiles/add-to-list.use-case";
 import { RemoveFromListUseCase } from "../../application/use-cases/profiles/remove-from-list.use-case";
@@ -24,10 +25,12 @@ import { PROFILE_REPOSITORY } from "../../domain/repositories/profile.repository
   providers: [
     CreateProfileUseCase,
     GetProfileUseCase,
+    ListProfilesUseCase,
     UpdateProfileUseCase,
     AddToListUseCase,
     RemoveFromListUseCase,
     DeleteProfileUseCase,
+    
     {
       provide: PROFILE_REPOSITORY,
       useClass: ProfileRepository,
@@ -36,6 +39,7 @@ import { PROFILE_REPOSITORY } from "../../domain/repositories/profile.repository
   exports: [
     CreateProfileUseCase,
     GetProfileUseCase,
+    ListProfilesUseCase,
     UpdateProfileUseCase,
     AddToListUseCase,
     RemoveFromListUseCase,

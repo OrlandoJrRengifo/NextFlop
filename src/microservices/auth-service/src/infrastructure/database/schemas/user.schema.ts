@@ -18,6 +18,12 @@ export class UserDocument extends Document {
   @Prop({ default: 0 })
   currentPoints: number;
 
+  @Prop({ default: null })
+  plan: string;
+
+  @Prop({ default: null })
+  paymentLast4: string;
+
   @Prop()
   createdAt: Date;
 

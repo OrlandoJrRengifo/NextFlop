@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -11,49 +11,20 @@ import { Play, ArrowLeft } from 'lucide-react'
 import { RegistrationProgress } from '@/components/registration-progress'
 import { PlanCard } from '@/components/plan-card'
 
-type Plan = 'basic' | 'medium' | 'premium' | null
+type Plan = string | null
 
-const plans = [
-  {
-    id: 'basic' as const,
-    name: 'Básico',
-    price: 9.99,
-    accentColor: 'primary' as const,
-    features: [
-      'Calidad HD',
-      '1 dispositivo a la vez',
-      'Catálogo completo',
-      '50 puntos por renovación'
-    ]
-  },
-  {
-    id: 'medium' as const,
-    name: 'Medium',
-    price: 14.99,
-    accentColor: 'secondary' as const,
-    features: [
-      'Calidad Full HD',
-      '2 dispositivos simultáneos',
-      'Catálogo completo',
-      'Descargas ilimitadas',
-      '100 puntos por renovación'
-    ]
-  },
-  {
-    id: 'premium' as const,
-    name: 'Premium',
-    price: 19.99,
-    accentColor: 'accent' as const,
-    features: [
-      'Calidad 4K Ultra HD',
-      '4 dispositivos simultáneos',
-      'Catálogo completo',
-      'Descargas ilimitadas',
-      'Audio Dolby Atmos',
-      '200 puntos por renovación'
-    ]
-  }
-]
+type PlanItem = {
+  id: string
+  name: string
+  price: number
+  features: string[]
+}
+
+const accentFor = (id: string) => {
+  if (id === 'basic') return 'primary'
+  if (id === 'medium') return 'secondary'
+  return 'accent'
+}
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -69,6 +40,34 @@ export default function RegisterPage() {
 
   // Step 2 data
   const [selectedPlan, setSelectedPlan] = useState<Plan>(null)
+
+  // Plans fetched from backend
+  const [plans, setPlans] = useState<PlanItem[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    setLoadingPlans(true)
+    fetch('http://localhost:3001/plans')
+      .then((res) => res.json())
+      .then((data) => {
+        if (mounted) setPlans(data)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingPlans(false))
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  // Check query param to preselect plan (read from window to avoid SSR hook during prerender)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const planFromQuery = params.get('plan')
+    if (planFromQuery) setSelectedPlan(planFromQuery as Plan)
+  }, [])
 
   // Step 3 data
   const [cardNumber, setCardNumber] = useState('')
@@ -94,17 +93,60 @@ export default function RegisterPage() {
   }
 
   const handleStep3Submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
-    // Simular procesamiento de pago
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    console.log('[v0] Registration completed:', { email, selectedPlan })
-    
-    setIsLoading(false)
-    // router.push('/dashboard')
-    alert('¡Cuenta creada exitosamente! Serás redirigido al dashboard.')
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // Primero, crear payment mock y obtener last4
+      const payRes = await fetch('http://localhost:3001/payments/mock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardNumber, expiryDate, cvv, cardName }),
+      });
+      if (!payRes.ok) {
+        const err = await payRes.json();
+        alert(err.message || 'Error al procesar pago');
+        setIsLoading(false);
+        return;
+      }
+      const payData = await payRes.json();
+
+      const payload = {
+        email,
+        password,
+        fullName,
+        birthDate,
+        plan: selectedPlan,
+        paymentLast4: payData.last4,
+      };
+
+      const res = await fetch('http://localhost:3001/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.message || 'Error al registrar usuario');
+        setIsLoading(false);
+        return;
+      }
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      // Después del registro, si no hay perfil activo, dirigir al selector de perfiles
+      const activeProfile = localStorage.getItem('activeProfile');
+      if (!activeProfile) {
+        alert('¡Cuenta creada! Por favor crea tu perfil.');
+        router.push('/profiles');
+      } else {
+        alert('¡Cuenta creada exitosamente! Serás redirigido al dashboard.');
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      alert('Error de red o servidor');
+    }
+    setIsLoading(false);
   }
 
   return (
@@ -216,7 +258,7 @@ export default function RegisterPage() {
                 name={plan.name}
                 price={plan.price}
                 features={plan.features}
-                accentColor={plan.accentColor}
+                accentColor={accentFor(plan.id) as any}
                 isSelected={selectedPlan === plan.id}
                 onSelect={() => setSelectedPlan(plan.id)}
               />

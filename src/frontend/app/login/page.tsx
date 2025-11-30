@@ -16,17 +16,36 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
-    // Simular autenticación
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Aquí iría la lógica real de autenticación
-    console.log('[v0] Login attempt:', { email })
-    
-    setIsLoading(false)
-    // router.push('/dashboard')
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.message || 'Error al iniciar sesión');
+        setIsLoading(false);
+        return;
+      }
+      const data = await res.json();
+      // Guardar el token en localStorage
+      localStorage.setItem('accessToken', data.accessToken);
+      // Si no hay perfil activo, llevar al selector de perfiles
+      const activeProfile = localStorage.getItem('activeProfile');
+      if (!activeProfile) {
+        router.push('/profiles');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      alert('Error de red o servidor');
+    }
+    setIsLoading(false);
   }
 
   return (

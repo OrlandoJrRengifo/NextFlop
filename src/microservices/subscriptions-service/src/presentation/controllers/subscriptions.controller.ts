@@ -13,8 +13,6 @@ import { Subscription } from "../../domain/entities/subscription.entity";
 
 @ApiTags("Subscriptions")
 @Controller("subscriptions")
-@UseGuards(JwtAuthGuard)      // Reactivado
-@ApiBearerAuth("JWT-auth")  // Reactivado
 export class SubscriptionsController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,

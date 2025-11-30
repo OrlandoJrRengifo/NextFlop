@@ -1,80 +1,123 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Play, Plus, Settings } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
-// Mock profile data
-const mockProfiles = [
-  { id: '1', name: 'Juan', icon: '👨' },
-  { id: '2', name: 'María', icon: '👩' },
-  { id: '3', name: 'Kids', icon: '🧒' }
-]
+type Profile = {
+  id: string
+  userId: string
+  name: string
+  iconUrl?: string
+}
 
 export default function ProfilesPage() {
   const router = useRouter()
-  const [profiles] = useState(mockProfiles)
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(false)
+  const [name, setName] = useState('')
+  const [iconUrl, setIconUrl] = useState('')
+  const [creating, setCreating] = useState(false)
 
-  const handleProfileClick = (profileId: string) => {
-    // Store selected profile in localStorage or state management
-    localStorage.setItem('selectedProfile', profileId)
-    router.push('/home')
+  const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+
+  const fetchProfiles = async () => {
+    setLoading(true)
+    try {
+      const token = getToken()
+      const res = await fetch('http://localhost:3001/profiles', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) {
+        setProfiles([])
+        return
+      }
+      const data = await res.json()
+      setProfiles(data)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProfiles()
+  }, [])
+
+  const createProfile = async () => {
+    if (!name) return alert('Ingresa un nombre para el perfil')
+    setCreating(true)
+    try {
+      const token = getToken()
+      const res = await fetch('http://localhost:3001/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name, iconUrl }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.message || 'Error creando perfil')
+        return
+      }
+      setName('')
+      setIconUrl('')
+      await fetchProfiles()
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const selectProfile = (profileId: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeProfile', profileId)
+    }
+    router.push('/')
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
-      {/* Logo Header */}
-      <div className="flex items-center gap-2 mb-8">
-        <Play className="h-10 w-10 text-primary fill-primary" />
-        <span className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-          NextFlop
-        </span>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-start px-6 py-12 bg-background">
+      <Card className="w-full max-w-4xl">
+        <CardHeader>
+          <CardTitle className="text-2xl">¿Quién está viendo?</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-6 mb-6">
+            {loading && <p>Cargando perfiles...</p>}
+            {!loading && profiles.length === 0 && (
+              <div className="col-span-3">
+                <p>No hay perfiles. Crea uno para comenzar.</p>
+              </div>
+            )}
 
-      {/* Title */}
-      <h1 className="text-4xl font-bold mb-12 text-center">¿Quién está viendo?</h1>
+            {profiles.map((p) => (
+              <div key={p.id} className="flex flex-col items-center">
+                <button onClick={() => selectProfile(p.id)} className="w-36 h-36 rounded-lg bg-muted flex items-center justify-center text-xl font-semibold">
+                  {p.iconUrl ? <img src={p.iconUrl} alt={p.name} className="w-full h-full object-cover rounded-lg"/> : <span>{p.name.charAt(0).toUpperCase()}</span>}
+                </button>
+                <p className="mt-2">{p.name}</p>
+              </div>
+            ))}
 
-      {/* Profiles Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        {profiles.map((profile) => (
-          <button
-            key={profile.id}
-            onClick={() => handleProfileClick(profile.id)}
-            className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:scale-105 transition-transform"
-          >
-            <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-border group-hover:border-primary flex items-center justify-center text-5xl transition-all">
-              {profile.icon}
+            {/* Create profile card */}
+            <div className="col-span-1">
+              <div className="p-4 border rounded-md">
+                <h4 className="font-semibold mb-2">Crear nuevo perfil</h4>
+                <Input placeholder="Nombre del perfil" value={name} onChange={(e) => setName(e.target.value)} className="mb-2" />
+                <Input placeholder="URL del avatar (opcional)" value={iconUrl} onChange={(e) => setIconUrl(e.target.value)} className="mb-2" />
+                <Button onClick={createProfile} disabled={creating}>{creating ? 'Creando...' : 'Crear perfil'}</Button>
+              </div>
             </div>
-            <span className="text-lg font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              {profile.name}
-            </span>
-          </button>
-        ))}
-
-        {/* Add Profile Button */}
-        <button
-          onClick={() => router.push('/profiles/create')}
-          className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:scale-105 transition-transform"
-        >
-          <div className="w-32 h-32 rounded-xl bg-card/50 backdrop-blur-sm border-2 border-dashed border-border group-hover:border-primary flex items-center justify-center transition-all">
-            <Plus className="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
-          <span className="text-lg font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-            Crear perfil
-          </span>
-        </button>
-      </div>
-
-      {/* Settings Link */}
-      <Link
-        href="/settings"
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mt-8"
-      >
-        <Settings className="h-5 w-5" />
-        <span>Configurar cuenta</span>
-      </Link>
+          <div className="mt-4 text-center">
+            <Button variant="ghost" onClick={() => router.push('/settings')}>Configurar cuenta</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
+

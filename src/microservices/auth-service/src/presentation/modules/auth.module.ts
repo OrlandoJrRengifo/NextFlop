@@ -5,6 +5,8 @@ import { MongooseModule } from "@nestjs/mongoose"
 
 // Controllers
 import { AuthController } from "../controllers/auth.controller"
+import { PlansController } from "../controllers/plans.controller"
+import { PaymentsController } from "../controllers/payments.controller"
 
 // Use Cases
 import { LoginUseCase } from "../../application/use-cases/auth/login.use-case"
@@ -36,7 +38,7 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard"
     }),
     RabbitMQModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, PlansController, PaymentsController],
   providers: [
     // Use Cases
     LoginUseCase,

@@ -53,6 +53,8 @@ export class UserRepository implements IUserRepository {
       userDoc.currentPoints ?? 0,
       userDoc.createdAt,
       userDoc.updatedAt,
+      userDoc.plan,
+      userDoc.paymentLast4,
     );
   }
 

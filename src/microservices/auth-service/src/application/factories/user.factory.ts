@@ -6,16 +6,21 @@ export class UserFactory {
     fullName: string,
     email: string,
     hashedPassword: string,
+    birthDate?: Date,
+    plan?: string,
+    paymentLast4?: string,
   ): User {
     return new User(
       uuidv4(),
       fullName,
-      new Date(),  
+      birthDate ?? new Date(),
       email,
       hashedPassword,
       0,
       new Date(),
       new Date(),
+      plan,
+      paymentLast4,
     );
   }
 }

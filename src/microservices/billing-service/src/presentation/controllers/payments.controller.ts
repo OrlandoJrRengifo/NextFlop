@@ -18,8 +18,6 @@ export class PaymentsController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard) // Se protege el endpoint
-  @ApiBearerAuth()         // Se indica en Swagger que requiere autorización
   @ApiOperation({ summary: "Procesar un pago" })
   @ApiResponse({ status: 201, description: "Pago procesado correctamente" })
   async process(@Body() dto: ProcessPaymentDto, @Req() request: Request) {

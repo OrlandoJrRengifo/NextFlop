@@ -8,6 +8,8 @@ export class User {
     public readonly currentPoints: number,
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,
+    public readonly plan?: string,
+    public readonly paymentLast4?: string,
   ) {}
 
   public canSpendPoints(amount: number): boolean {
