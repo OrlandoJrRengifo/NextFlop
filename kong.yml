@@ -68,7 +68,7 @@ services:
 
   # ONBOARDING SERVICE (Usa Auth Service)
   - name: onboarding-service
-    url: http://auth-service:3000 # VERIFICADO: Internamente corre en 3000
+    url: http://auth-service:3000/onboarding # VERIFICADO: Internamente corre en 3000
     routes:
       - name: onboarding-routes
         paths:

@@ -3,6 +3,8 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { MongooseModule } from "@nestjs/mongoose";
 import { HttpModule } from "@nestjs/axios";
+import { ConfigModule, ConfigService } from "@nestjs/config"; // <--- Importamos Config
+
 import { PaymentsController } from "../controllers/payments.controller";
 import { ProcessPaymentUseCase } from "../../application/use-cases/payments/process-payment.use-case";
 import { PaymentRepository } from "../../infrastructure/repositories/payment.repository";
@@ -14,7 +16,6 @@ import { PaymentDocument, PaymentSchema } from "../../infrastructure/database/sc
 import { RabbitMQModule } from "../../infrastructure/messaging/rabbitmq.module";
 import { StripeModule } from "../../infrastructure/stripe/stripe.module";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
-// 1. Importar la JwtStrategy
 import { JwtStrategy } from "../strategies/jwt.strategy"; 
 
 @Module({
@@ -22,24 +23,29 @@ import { JwtStrategy } from "../strategies/jwt.strategy";
     MongooseModule.forFeature([
       { name: PaymentDocument.name, schema: PaymentSchema },
     ]),
-    PassportModule,
-    JwtModule.register({ // Esta configuración debería ser asíncrona para usar el .env
-      secret: process.env.JWT_SECRET || "your-super-secret-jwt-key",
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || "24h" },
+    PassportModule.register({ defaultStrategy: 'jwt' }), // Definimos estrategia por defecto
+    // CORRECCIÓN: Usamos registerAsync para asegurar que lea el .env correcto
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '24h' },
+      }),
+      inject: [ConfigService],
     }),
     HttpModule,
     RabbitMQModule,
     StripeModule,
+    ConfigModule, // Aseguramos que ConfigModule esté disponible
   ],
   controllers: [PaymentsController],
   providers: [
     ProcessPaymentUseCase,
     ExternalApiService,
     StripeService,
-    EventPublisher, // EventPublisher también debe estar aquí si se usa
+    EventPublisher,
     { provide: PAYMENT_REPOSITORY, useClass: PaymentRepository },
     JwtAuthGuard,
-    // 2. Añadir la JwtStrategy a los providers
     JwtStrategy,
   ],
   exports: [PAYMENT_REPOSITORY],

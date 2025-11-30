@@ -1,18 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Schema as MongooseSchema } from "mongoose";
+import { Model } from "mongoose";
 import { IProfileRepository } from "../../domain/repositories/profile.repository.interface";
 import { Profile } from "../../domain/entities/profile.entity";
-import { ProfileDocument } from "../database/schemas/profile.schema";
+import { ProfileDocument, ProfileSchema } from "../database/schemas/profile.schema";
 
 @Injectable()
 export class ProfileRepository implements IProfileRepository {
+  private readonly logger = new Logger(ProfileRepository.name);
+
   constructor(
     @InjectModel(ProfileDocument.name) 
     private readonly profileModel: Model<ProfileDocument>
   ) {}
 
   async create(profileData: Omit<Profile, "id" | "createdAt" | "updatedAt">): Promise<Profile> {
+    // Si la entidad viene sin ID, Mongo generará un ObjectId, pero tu arquitectura parece esperar UUIDs.
+    // Asumiremos que el ID se maneja antes o que aceptamos el de Mongo casteado a string.
     const profile = new this.profileModel(profileData);
     const saved = await profile.save();
     return this.mapToEntity(saved);
@@ -38,7 +42,6 @@ export class ProfileRepository implements IProfileRepository {
     return !!result;
   }
 
-  // Métodos para manejar listas (movidos aquí desde UserRepository)
   async addToFavorites(profileId: string, mediaId: string): Promise<Profile | null> {
     return this.update(profileId, { $addToSet: { favorites: mediaId } } as any);
   }
@@ -61,15 +64,20 @@ export class ProfileRepository implements IProfileRepository {
   }
 
   private mapToEntity(doc: ProfileDocument): Profile {
+    // Mapeo seguro a la Entidad
     return new Profile(
       doc._id.toString(),
       doc.userId,
       doc.name,
       doc.iconUrl,
-      doc.tasteProfile,
-      doc.favorites,
-      doc.watchLater,
-      doc.history,
+      doc.tasteProfile || [],
+      // Aseguramos que sean arrays de strings
+      (doc.favorites || []).map(f => f.toString()),
+      (doc.watchLater || []).map(w => w.toString()),
+      (doc.history || []).map(h => ({
+        mediaId: h.mediaId.toString(),
+        watchedAt: h.watchedAt
+      })),
       doc.createdAt,
       doc.updatedAt
     );

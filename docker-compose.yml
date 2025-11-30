@@ -92,6 +92,9 @@ services:
       - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=24h
+      - AUTH_SERVICE_URL=http://auth-service:3000
+      - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000/subscriptions
+      - BILLING_SERVICE_URL=http://billing-service:3000/payments
     depends_on:
       - mongodb-auth
       - rabbitmq
@@ -135,8 +138,8 @@ services:
       - PORT=3000
       - MONGODB_URI=mongodb://admin:password123@mongodb-billing:27017/nextflop_billing?authSource=admin
       - RABBITMQ_URL=amqp://admin:password123@rabbitmq:5672
-      - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-      - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=whsec_test_secret
       - AUTH_SERVICE_URL=http://auth-service:3000
       - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production

@@ -11,6 +11,7 @@ import { CancelSubscriptionUseCase } from "../../application/use-cases/subscript
 import { RenewSubscriptionUseCase } from "../../application/use-cases/subscriptions/renew-subscription.use-case";
 import { AssignPlanUseCase } from "../../application/use-cases/subscriptions/assign-plan.use-case";
 import { ISubscriptionRepository } from "../../domain/repositories/subscription.repository.interface";
+import { ISubscriptionPlanRepository } from "../../domain/repositories/subscription-plan.repository.interface";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { CreateSubscriptionDto } from "../dtos/subscriptions/create-subscription.dto";
 import { CancelSubscriptionDto } from "../dtos/subscriptions/cancel-subscription.dto";
@@ -19,7 +20,7 @@ import { SubscriptionResponseDto } from "../dtos/subscriptions/subscription-resp
 import { Subscription } from "../../domain/entities/subscription.entity";
 
 @ApiTags("Subscriptions")
-@Controller("subscriptions") 
+@Controller("subscriptions")
 export class SubscriptionsController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
@@ -29,42 +30,46 @@ export class SubscriptionsController {
 
     @Inject("ISubscriptionRepository")
     private readonly subscriptionRepository: ISubscriptionRepository,
+
+    @Inject("ISubscriptionPlanRepository")
+    private readonly planRepository: ISubscriptionPlanRepository,
   ) { }
 
   @Post("assign")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Assign a plan to the authenticated user" })
-  @ApiResponse({
-    status: 201,
-    description: "Plan assigned successfully",
-    type: SubscriptionResponseDto,
-  })
-  async assignPlan(
-    @Body() dto: AssignPlanDto,
-    @Req() request: Request
-  ): Promise<SubscriptionResponseDto> {
+  @ApiResponse({ status: 201, description: "Plan assigned successfully", type: SubscriptionResponseDto })
+  async assignPlan(@Body() dto: AssignPlanDto, @Req() request: Request): Promise<SubscriptionResponseDto> {
     const user = request.user as any;
-
-    const subscription = await this.assignPlanUseCase.execute(
-      user.userId,
-      dto.planId
-    );
-
+    const subscription = await this.assignPlanUseCase.execute(user.userId, dto.planId);
     return this.toResponseDto(subscription);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Create a new subscription" })
   @ApiResponse({ status: 201, description: "Subscription created", type: SubscriptionResponseDto })
   async createSubscription(@Body() createSubscriptionDto: CreateSubscriptionDto, @Req() request: Request): Promise<SubscriptionResponseDto> {
     const user = request.user as any;
+    
     const subscription = await this.createSubscriptionUseCase.execute(
       user.userId,
       createSubscriptionDto.planId,
     );
-    return this.toResponseDto(subscription);
+
+    const plan = await this.planRepository.findById(createSubscriptionDto.planId);
+    const price = plan ? plan.price : 0;
+
+    const response = this.toResponseDto(subscription);
+    response.price = price;
+    return response;
   }
 
   @Get("my-subscriptions")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getUserSubscriptions(@Req() request: Request): Promise<SubscriptionResponseDto[]> {
     const user = request.user as any;
     const subscriptions = await this.subscriptionRepository.findByUserId(user.userId);
@@ -72,6 +77,8 @@ export class SubscriptionsController {
   }
 
   @Get("active")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getActiveSubscription(@Req() request: Request): Promise<SubscriptionResponseDto | null> {
     const user = request.user as any;
     const subscription = await this.subscriptionRepository.findActiveByUserId(user.userId);
@@ -79,6 +86,8 @@ export class SubscriptionsController {
   }
 
   @Put(":id/cancel")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async cancelSubscription(
     @Param("id") subscriptionId: string,
     @Body() cancelDto: CancelSubscriptionDto,
@@ -90,6 +99,8 @@ export class SubscriptionsController {
   }
 
   @Put(":id/renew")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async renewSubscription(@Param("id") subscriptionId: string, @Req() request: Request): Promise<{ message: string }> {
     const user = request.user as any;
     await this.renewSubscriptionUseCase.execute(subscriptionId, user.userId);
@@ -97,6 +108,8 @@ export class SubscriptionsController {
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getSubscription(@Param("id") subscriptionId: string): Promise<SubscriptionResponseDto | null> {
     const subscription = await this.subscriptionRepository.findById(subscriptionId);
     return subscription ? this.toResponseDto(subscription) : null;
@@ -113,6 +126,7 @@ export class SubscriptionsController {
       consecutiveMonthsPaid: subscription.consecutiveMonthsPaid,
       createdAt: subscription.createdAt,
       updatedAt: subscription.updatedAt,
+      price: 0,
     };
   }
 }

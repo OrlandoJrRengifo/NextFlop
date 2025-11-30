@@ -4,6 +4,9 @@ import { PaymentStatus } from "../../../domain/entities/payment.entity";
 
 @Schema({ timestamps: true })
 export class PaymentDocument extends Document {
+  @Prop({ type: String })
+  _id: string;
+
   @Prop({ required: true })
   userId: string;
 
@@ -35,11 +38,9 @@ export class PaymentDocument extends Document {
   @Prop({ type: Object, default: {} })
   failureDetails: Record<string, any>;
 
-  // timestamps añadidos por mongoose → deben declararse manualmente
   createdAt: Date;
   updatedAt: Date;
 
-  // Método de pago
   @Prop()
   cardLast4?: string;
 

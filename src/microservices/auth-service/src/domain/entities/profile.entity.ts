@@ -1,10 +1,6 @@
-// src/domain/entities/profile.entity.ts
-
-import { Schema as MongooseSchema } from "mongoose";
-
-// Tipos para los datos anidados, para mayor claridad
 export type TasteProfileItem = { genre: string; score: number };
-export type HistoryItem = { mediaId: MongooseSchema.Types.ObjectId; watchedAt: Date };
+// CAMBIO: mediaId ahora es string (UUID)
+export type HistoryItem = { mediaId: string; watchedAt: Date };
 
 export class Profile {
   constructor(
@@ -13,8 +9,10 @@ export class Profile {
     public readonly name: string,
     public readonly iconUrl: string,
     public readonly tasteProfile: TasteProfileItem[],
-    public readonly favorites: MongooseSchema.Types.ObjectId[],
-    public readonly watchLater: MongooseSchema.Types.ObjectId[],
+    // CAMBIO: Array de strings (UUIDs)
+    public readonly favorites: string[],
+    // CAMBIO: Array de strings (UUIDs)
+    public readonly watchLater: string[],
     public readonly history: HistoryItem[],
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,

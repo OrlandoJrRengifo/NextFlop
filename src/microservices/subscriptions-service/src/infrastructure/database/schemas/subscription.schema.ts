@@ -3,10 +3,11 @@ import { Document } from "mongoose";
 
 @Schema({ timestamps: true })
 export class SubscriptionDocument extends Document {
-  @Prop({ required: true, index: true })
+  // Aseguramos que userId acepte UUIDs (Strings)
+  @Prop({ required: true, index: true, type: String })
   userId: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, type: String })
   planId: string;
 
   @Prop({
@@ -25,7 +26,6 @@ export class SubscriptionDocument extends Document {
   @Prop({ required: true, index: true })
   endDate: Date;
   
-  // Se añaden para que TypeScript los reconozca
   @Prop()
   createdAt: Date;
 

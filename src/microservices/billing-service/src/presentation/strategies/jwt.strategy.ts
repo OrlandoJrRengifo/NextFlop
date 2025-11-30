@@ -1,4 +1,3 @@
-// billing-service/src/presentation/strategies/jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -15,7 +14,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // El payload es la información decodificada del token
     return { userId: payload.sub, email: payload.email };
   }
 }

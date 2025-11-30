@@ -9,7 +9,7 @@ import { ProcessPaymentDto } from "../dtos/payments/process-payment.dto";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 
 @ApiTags("Payments")
-@Controller()
+@Controller("payments") // <--- CAMBIO: Agregamos prefijo 'payments'
 export class PaymentsController {
   constructor(
     private readonly processPaymentUseCase: ProcessPaymentUseCase,
@@ -18,18 +18,18 @@ export class PaymentsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard) // <--- CRÍTICO: Agregamos el Guard para obtener el usuario
+  @ApiBearerAuth()         // Documentación Swagger
   @ApiOperation({ summary: "Procesar un pago" })
   @ApiResponse({ status: 201, description: "Pago procesado correctamente" })
   async process(@Body() dto: ProcessPaymentDto, @Req() request: Request) {
     const user = request.user as any;
 
     return this.processPaymentUseCase.execute({
-      userId: user.userId,
+      userId: user.userId, // Ahora sí existe user.userId
       subscriptionId: dto.subscriptionId,
       originalAmount: dto.originalAmount,
       pointsToRedeem: dto.pointsToRedeem ?? 0,
-
-      // NUEVOS CAMPOS DEL MÉTODO DE PAGO
       cardNumber: dto.cardNumber,
       expiration: dto.expiration,
       cvv: dto.cvv,
@@ -38,6 +38,7 @@ export class PaymentsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard) // Opcional: Proteger historial
   @ApiOperation({ summary: "Listar todos los pagos" })
   @ApiQuery({ name: "userId", required: false })
   @ApiResponse({ status: 200, description: "Lista de pagos" })
@@ -47,6 +48,7 @@ export class PaymentsController {
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Obtener un pago por ID" })
   @ApiParam({ name: "id", description: "ID del pago" })
   @ApiResponse({ status: 200, description: "Detalles del pago" })

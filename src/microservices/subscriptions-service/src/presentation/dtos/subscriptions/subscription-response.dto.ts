@@ -27,4 +27,7 @@ export class SubscriptionResponseDto {
 
   @ApiProperty({ description: "Last update date" })
   updatedAt: Date;
+
+  @ApiProperty({ description: "Price of the plan at the moment of subscription" })
+  price: number;
 }

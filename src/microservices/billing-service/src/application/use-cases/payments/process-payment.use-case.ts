@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { randomUUID } from "crypto"; // Nativo de Node
 import {
   PAYMENT_REPOSITORY,
   IPaymentRepository,
@@ -38,8 +39,11 @@ export class ProcessPaymentUseCase {
     const cardLast4 = cardNumber.slice(-4);
     const cardBrand = this.detectBrand(cardNumber);
 
+    // CORRECCIÓN: Generamos UUID explícito para evitar problemas con Mongo
+    const paymentId = randomUUID();
+
     const paymentEntity = new Payment(
-      undefined,
+      paymentId,
       userId,
       subscriptionId,
       originalAmount,
@@ -59,6 +63,7 @@ export class ProcessPaymentUseCase {
     const saved = await this.paymentRepository.create(paymentEntity);
 
     try {
+      // Simulamos éxito con Stripe (aquí iría la lógica real)
       const updated = await this.paymentRepository.update(saved.id!, {
         status: PaymentStatus.SUCCEEDED,
         pointsGained: 100,
