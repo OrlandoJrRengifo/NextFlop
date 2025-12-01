@@ -1,28 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Clock, Trash2, Play } from 'lucide-react'
 import { ActionPopup } from '@/components/action-popup'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
-// Mock data
-const mockWatchLater = [
-  { id: '1', title: 'Acción Extrema', image: '/action-movie.png', addedDate: '2025-01-15', duration: '2h 15m' },
-  { id: '2', title: 'Drama Intenso', image: '/intense-drama-scene.png', addedDate: '2025-01-14', duration: '1h 45m' },
-  { id: '3', title: 'Comedia Romántica', image: '/romantic-comedy.jpg', addedDate: '2025-01-13', duration: '1h 30m' },
-  { id: '4', title: 'Thriller Psicológico', image: '/psychological-thriller.jpg', addedDate: '2025-01-12', duration: '2h 5m' },
-  { id: '5', title: 'Sci-Fi Épico', image: '/epic-sci-fi.jpg', addedDate: '2025-01-10', duration: '2h 30m' },
-  { id: '6', title: 'Terror Nocturno', image: '/horror-movie.png', addedDate: '2025-01-08', duration: '1h 50m' },
-]
+import {
+  getWatchLater,
+  removeWatchLater,
+  WatchLaterItem
+} from "@/services/watchlater";
 
 export default function WatchLaterPage() {
-  const [items, setItems] = useState(mockWatchLater)
-  const [showPopup, setShowPopup] = useState(false)
-  const [popupMessage, setPopupMessage] = useState('')
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [itemToRemove, setItemToRemove] = useState<string | null>(null)
+  const [items, setItems] = useState<WatchLaterItem[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
+
+  useEffect(() => {
+    setItems(getWatchLater());
+  }, []);
 
   const handleRemove = (id: string) => {
     setItemToRemove(id)
@@ -31,11 +31,12 @@ export default function WatchLaterPage() {
 
   const confirmRemove = () => {
     if (itemToRemove) {
-      setItems(items.filter(item => item.id !== itemToRemove))
-      setPopupMessage('Eliminado de Ver más tarde')
-      setShowPopup(true)
-      setTimeout(() => setShowPopup(false), 3000)
-      setItemToRemove(null)
+      removeWatchLater(itemToRemove);
+      setItems(getWatchLater());
+      setPopupMessage('Eliminado de Ver más tarde');
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+      setItemToRemove(null);
     }
   }
 
@@ -51,7 +52,7 @@ export default function WatchLaterPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Ver más tarde</h1>
-              <p className="text-muted-foreground">{items.length} {items.length === 1 ? 'título' : 'títulos'} guardados</p>
+              <p className="text-muted-foreground">{items.length} títulos guardados</p>
             </div>
           </div>
 
@@ -69,14 +70,16 @@ export default function WatchLaterPage() {
                 <div key={item.id} className="group">
                   <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-3">
                     <img
-                      src={item.image || "/placeholder.svg"}
+                      src={item.poster || item.image || "/placeholder.svg"}
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                       <Button size="icon" className="h-12 w-12 rounded-full">
                         <Play className="h-5 w-5 fill-current" />
                       </Button>
+
                       <Button 
                         size="icon" 
                         variant="destructive" 
@@ -86,15 +89,18 @@ export default function WatchLaterPage() {
                         <Trash2 className="h-5 w-5" />
                       </Button>
                     </div>
+
                     <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium">
-                      {item.duration}
+                      {item.duration || "—"}
                     </div>
                   </div>
-                  <h3 className="font-semibold mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+
+                  <h3 className="font-semibold mb-1 line-clamp-2 group-hover:text-primary">
                     {item.title}
                   </h3>
+
                   <p className="text-sm text-muted-foreground">
-                    Agregado el {new Date(item.addedDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                    Agregado el {new Date(item.addedDate || "").toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                   </p>
                 </div>
               ))}
@@ -108,7 +114,7 @@ export default function WatchLaterPage() {
         onClose={() => setShowPopup(false)}
         message={popupMessage}
         type="success"
-        icon="trash"
+        icon="clock"
       />
 
       <ConfirmationDialog
@@ -116,7 +122,7 @@ export default function WatchLaterPage() {
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={confirmRemove}
         title="Eliminar de Ver más tarde"
-        description="¿Estás seguro de que quieres eliminar este título de tu lista?"
+        description="¿Seguro que quieres eliminar este título?"
         confirmText="Eliminar"
         variant="destructive"
       />
