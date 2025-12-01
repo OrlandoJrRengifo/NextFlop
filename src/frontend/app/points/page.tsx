@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Play, Trophy, Gift, Star, Info } from 'lucide-react'
 
 const earnPoints = [
+  { action: 'Crear cuenta nueva', points: 50, icon: Star },
   { action: 'Renovar suscripción Básica', points: 50, icon: Star },
   { action: 'Renovar suscripción Medium', points: 100, icon: Star },
   { action: 'Renovar suscripción Premium', points: 200, icon: Star },
@@ -13,16 +14,16 @@ const earnPoints = [
 
 const redeemPoints = [
   {
+    points: 180,
+    reward: '15 dias gratis',
+    description: '15 dias gratis de tu plan actual sin costo',
+    terms: 'Válido para cualquier plan activo'
+  },
+   {
     points: 300,
     reward: '1 mes gratis',
     description: 'Un mes completo de tu plan actual sin costo',
     terms: 'Válido para cualquier plan activo'
-  },
-  {
-    points: 150,
-    reward: '30% de descuento',
-    description: 'Descuento del 30% en tu próxima renovación',
-    terms: 'Aplicable solo a la siguiente factura'
   },
   {
     points: 500,
@@ -31,10 +32,10 @@ const redeemPoints = [
     terms: 'Válido para planes Medium y Premium'
   },
   {
-    points: 100,
-    reward: 'Mejora temporal a Premium',
-    description: '1 mes de upgrade a plan Premium',
-    terms: 'Solo para usuarios de plan Básico o Medium'
+    points: 700,
+    reward: '3 meses gratis',
+    description: 'Tres meses completos sin pagar',
+    terms: 'Válido para planes Medium y Premium'
   }
 ]
 

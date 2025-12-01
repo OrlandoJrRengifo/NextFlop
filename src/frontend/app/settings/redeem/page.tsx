@@ -8,15 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Play, ArrowLeft, Trophy } from 'lucide-react'
 
 const rewards = [
+  { points: 180, reward: '15 dias gratis', available: true },
   { points: 300, reward: '1 mes gratis', available: true },
-  { points: 150, reward: '30% de descuento', available: true },
   { points: 500, reward: '2 meses gratis', available: false },
-  { points: 100, reward: 'Upgrade a Premium (1 mes)', available: true }
+  { points: 700, reward: '3 meses gratis', available: true }
 ]
 
 export default function RedeemPointsPage() {
   const router = useRouter()
-  const [userPoints] = useState(250)
+  const [userPoints] = useState(50)
 
   const handleRedeem = (requiredPoints: number, reward: string) => {
     if (userPoints >= requiredPoints) {

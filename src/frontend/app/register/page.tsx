@@ -120,28 +120,47 @@ function RegisterContent() {
   }
 
   const handleStep3Submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  e.preventDefault();
+  setIsLoading(true);
 
-    try {
-      const body = {
-        user: { email, password, fullName, birthDate },
-        planId: selectedPlan!,
-        payment: { cardNumber, expiration: expiryDate, cvv, nameOnCard: cardName, pointsToRedeem: 0 },
-      };
+  try {
+    // variable para el historial de pago
+    const paymentRecord = {
+      date: new Date().toLocaleDateString("es-CO"),
+      method: `**** ${cardNumber.slice(-4)}`,
+      discount: 0,
+      amount: finalPlans.find(p => p.id === selectedPlan)?.price || 0
+    };
 
-      const response = await completeOnboarding(body);
-      if (response.accessToken) {
-        localStorage.setItem("nextflop_token", response.accessToken);
-      }
-      alert("¡Cuenta creada exitosamente!");
-      router.push("/login");
-    } catch (err: any) {
-      console.error("Onboarding error:", err);
-      alert(err.message || "Error al crear la cuenta");
+    localStorage.setItem("nextflop_lastPayment", JSON.stringify(paymentRecord));
+
+    const body = {
+      user: { email, password, fullName, birthDate },
+      planId: selectedPlan!,
+      payment: { 
+        cardNumber, 
+        expiration: expiryDate, 
+        cvv, 
+        nameOnCard: cardName, 
+        pointsToRedeem: 0 
+      },
+    };
+
+    const response = await completeOnboarding(body);
+
+    if (response.accessToken) {
+      localStorage.setItem("nextflop_token", response.accessToken);
     }
-    setIsLoading(false);
-  };
+
+    alert("¡Cuenta creada exitosamente!");
+    router.push("/login");
+  } catch (err: any) {
+    console.error("Onboarding error:", err);
+    alert(err.message || "Error al crear la cuenta");
+  }
+
+  setIsLoading(false);
+};
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-background">
