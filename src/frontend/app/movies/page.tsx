@@ -1,71 +1,72 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { AppHeader } from '@/components/app-header'
-import { ContentCarousel } from '@/components/content-carousel'
-import { MovieModal } from '@/components/movie-modal'
+import { useState, useEffect } from 'react';
+import { AppHeader } from '@/components/app-header';
+import { ContentCarousel } from '@/components/content-carousel';
+import { MovieModal } from '@/components/movie-modal';
 
-// Mock data for movies
-const recommendedMovies = [
-  { id: '1', title: 'Acción Explosiva', image: '/action-movie.png' },
-  { id: '2', title: 'Drama Profundo', image: '/intense-drama-scene.png' },
-  { id: '3', title: 'Comedia Divertida', image: '/placeholder.svg?height=450&width=300' },
-  { id: '4', title: 'Suspenso Total', image: '/placeholder.svg?height=450&width=300' },
-  { id: '5', title: 'Romance Épico', image: '/placeholder.svg?height=450&width=300' },
-  { id: '6', title: 'Aventura Increíble', image: '/placeholder.svg?height=450&width=300' },
-]
+const API = "https://api.themoviedb.org/3";
+const KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
-const acclaimedMovies = [
-  { id: '7', title: 'Clásico Atemporal', image: '/epic-movie-scene.jpg' },
-  { id: '8', title: 'Obra Maestra', image: '/new-movie-release.jpg' },
-  { id: '9', title: 'Premiada Internacional', image: '/placeholder.svg?height=450&width=300' },
-  { id: '10', title: 'Aclamada por Críticos', image: '/placeholder.svg?height=450&width=300' },
-  { id: '11', title: 'Favorita del Público', image: '/placeholder.svg?height=450&width=300' },
-  { id: '12', title: 'Ganadora Oscar', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const recentMovies = [
-  { id: '13', title: 'Estreno 2025', image: '/placeholder.svg?height=450&width=300' },
-  { id: '14', title: 'Recién Llegada', image: '/placeholder.svg?height=450&width=300' },
-  { id: '15', title: 'Lanzamiento Especial', image: '/placeholder.svg?height=450&width=300' },
-  { id: '16', title: 'Nuevo Blockbuster', image: '/placeholder.svg?height=450&width=300' },
-  { id: '17', title: 'Fresh Release', image: '/placeholder.svg?height=450&width=300' },
-  { id: '18', title: 'Just Dropped', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const popularMovies = [
-  { id: '19', title: 'Trending #1', image: '/placeholder.svg?height=450&width=300' },
-  { id: '20', title: 'Top Viewed', image: '/placeholder.svg?height=450&width=300' },
-  { id: '21', title: 'Fan Favorite', image: '/placeholder.svg?height=450&width=300' },
-  { id: '22', title: 'Viral Hit', image: '/placeholder.svg?height=450&width=300' },
-  { id: '23', title: 'Must Watch', image: '/placeholder.svg?height=450&width=300' },
-  { id: '24', title: 'Everyone Talking', image: '/placeholder.svg?height=450&width=300' },
-]
-
-const classicMovies = [
-  { id: '25', title: 'Clásico 80s', image: '/placeholder.svg?height=450&width=300' },
-  { id: '26', title: 'Golden Age', image: '/placeholder.svg?height=450&width=300' },
-  { id: '27', title: 'Retro Gem', image: '/placeholder.svg?height=450&width=300' },
-  { id: '28', title: 'Vintage Classic', image: '/placeholder.svg?height=450&width=300' },
-  { id: '29', title: 'Old School', image: '/placeholder.svg?height=450&width=300' },
-  { id: '30', title: 'Timeless', image: '/placeholder.svg?height=450&width=300' },
-]
+const mapMovie = (m: any) => ({
+  id: m.id,
+  title: m.title,
+  image: m.poster_path
+    ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+    : "/placeholder.jpg",
+  poster: m.poster_path
+    ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+    : "/placeholder.jpg",
+  backdrop: m.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${m.backdrop_path}`
+    : "/placeholder.jpg",
+  media_type: "movie",
+});
 
 export default function MoviesPage() {
-  const [selectedMovie, setSelectedMovie] = useState<any>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMovie, setSelectedMovie] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleItemClick = (id: string) => {
-    setSelectedMovie({
-      id,
-      title: 'Película Ejemplo',
-      description: 'Una película increíble que te atrapará desde el primer momento. Con actuaciones excepcionales y una trama envolvente.',
-      genre: 'Drama, Acción',
-      year: '2025',
-      image: '/epic-movie-scene.jpg',
-    })
-    setIsModalOpen(true)
-  }
+  const [recommended, setRecommended] = useState<any[]>([]);
+  const [acclaimed, setAcclaimed] = useState<any[]>([]);
+  const [recent, setRecent] = useState<any[]>([]);
+  const [popular, setPopular] = useState<any[]>([]);
+  const [classic, setClassic] = useState<any[]>([]);
+
+  const handleItemClick = (item: any) => {
+    setSelectedMovie(item);
+    setIsModalOpen(true);
+  };
+
+
+  // 🔥 Obtener todas las secciones de TMDB
+  useEffect(() => {
+    async function load() {
+      const endpoints = {
+        recommended: `${API}/trending/movie/week?api_key=${KEY}&language=es-ES`,
+        acclaimed: `${API}/movie/top_rated?api_key=${KEY}&language=es-ES`,
+        recent: `${API}/movie/now_playing?api_key=${KEY}&language=es-ES`,
+        popular: `${API}/movie/popular?api_key=${KEY}&language=es-ES`,
+        classic: `${API}/discover/movie?api_key=${KEY}&sort_by=release_date.asc&primary_release_year=1990&language=es-ES`,
+      };
+
+      const fetchAndSet = async (url: string, setter: any) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        setter(data.results.map(mapMovie));
+      };
+
+      await Promise.all([
+        fetchAndSet(endpoints.recommended, setRecommended),
+        fetchAndSet(endpoints.acclaimed, setAcclaimed),
+        fetchAndSet(endpoints.recent, setRecent),
+        fetchAndSet(endpoints.popular, setPopular),
+        fetchAndSet(endpoints.classic, setClassic),
+      ]);
+    }
+
+    load();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,38 +76,41 @@ export default function MoviesPage() {
         <div className="container mx-auto px-4 space-y-8">
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-2">Películas</h1>
-            <p className="text-lg text-muted-foreground">Descubre tu próxima película favorita</p>
+            <p className="text-lg text-muted-foreground">
+              Descubre tu próxima película favorita
+            </p>
           </div>
 
           {/* Movie Sections */}
           <ContentCarousel
             title="Recomendado en películas"
-            items={recommendedMovies}
-            onItemClick={handleItemClick}
+            items={recommended}
+            onItemClick={(item) => handleItemClick(item)}
           />
 
           <ContentCarousel
             title="Películas aclamadas"
-            items={acclaimedMovies}
-            onItemClick={handleItemClick}
+            items={acclaimed}
+            onItemClick={(item) => handleItemClick(item)}
           />
 
           <ContentCarousel
             title="Películas recientes"
-            items={recentMovies}
-            onItemClick={handleItemClick}
+            items={recent}
+            onItemClick={(item) => handleItemClick(item)}
           />
 
           <ContentCarousel
             title="Películas populares"
-            items={popularMovies}
-            onItemClick={handleItemClick}
+            items={popular}
+            onItemClick={(item) => handleItemClick(item)}
+
           />
 
           <ContentCarousel
             title="Clásicos imperdibles"
-            items={classicMovies}
-            onItemClick={handleItemClick}
+            items={classic}
+            onItemClick={(item) => handleItemClick(item)}
           />
         </div>
       </main>
@@ -117,5 +121,5 @@ export default function MoviesPage() {
         movie={selectedMovie}
       />
     </div>
-  )
+  );
 }

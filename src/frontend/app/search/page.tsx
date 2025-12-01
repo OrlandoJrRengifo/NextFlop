@@ -1,48 +1,88 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { AppHeader } from '@/components/app-header'
-import { Input } from '@/components/ui/input'
-import { Search, TrendingUp } from 'lucide-react'
-import { MovieModal } from '@/components/movie-modal'
+import { useState, useEffect } from "react";
+import { AppHeader } from "@/components/app-header";
+import { Input } from "@/components/ui/input";
+import { Search, TrendingUp } from "lucide-react";
+import { MovieModal } from "@/components/movie-modal";
+
+const API = "https://api.themoviedb.org/3";
+const KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+
+// 🔥 Mapper para adaptar TMDB → tu formato
+const mapItem = (m: any) => ({
+  id: m.id,
+  title: m.title || m.name,
+  description: m.overview,
+  genre: m.media_type === "movie" ? "Película" : "Serie",
+  year: m.release_date?.split("-")[0] || m.first_air_date?.split("-")[0] || "—",
+  image: m.poster_path
+    ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+    : "/placeholder.jpg",
+  poster: m.poster_path
+    ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+    : "/placeholder.jpg",
+  backdrop: m.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${m.backdrop_path}`
+    : "/placeholder.jpg",
+});
 
 const suggestions = [
-  { id: '1', text: 'Películas de acción', type: 'genre' },
-  { id: '2', text: 'Comedias románticas', type: 'genre' },
-  { id: '3', text: 'Series de suspenso', type: 'genre' },
-  { id: '4', text: 'Documentales de naturaleza', type: 'genre' },
-  { id: '5', text: 'Anime populares', type: 'genre' },
-  { id: '6', text: 'Películas clásicas', type: 'popular' },
-  { id: '7', text: 'Estrenos 2025', type: 'popular' },
-  { id: '8', text: 'Series de Netflix', type: 'popular' },
-]
-
-const mockResults = Array.from({ length: 12 }, (_, i) => ({
-  id: `result-${i + 1}`,
-  title: `Resultado ${i + 1}`,
-  image: `/placeholder.svg?height=450&width=300&query=search+result+${i + 1}`,
-}))
+  { id: "1", text: "Películas de acción", type: "genre" },
+  { id: "2", text: "Comedias románticas", type: "genre" },
+  { id: "3", text: "Series de suspenso", type: "genre" },
+  { id: "4", text: "Documentales de naturaleza", type: "genre" },
+  { id: "5", text: "Anime populares", type: "genre" },
+  { id: "6", text: "Películas clásicas", type: "popular" },
+  { id: "7", text: "Estrenos 2025", type: "popular" },
+  { id: "8", text: "Series de Netflix", type: "popular" },
+];
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedMovie, setSelectedMovie] = useState<any>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [selectedMovie, setSelectedMovie] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 🔥 REAL SEARCH — TMDB
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
+
+    let timeout = setTimeout(async () => {
+      setLoading(true);
+
+      const res = await fetch(
+        `${API}/search/multi?api_key=${KEY}&language=es-ES&query=${encodeURIComponent(
+          searchQuery
+        )}`
+      );
+      const data = await res.json();
+
+      setResults(
+        data.results
+          .filter((m: any) => m.media_type === "movie" || m.media_type === "tv")
+          .map(mapItem)
+      );
+
+      setLoading(false);
+    }, 600); // Delay para no saturar la API
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   const handleSuggestionClick = (text: string) => {
-    setSearchQuery(text)
-  }
+    setSearchQuery(text);
+  };
 
   const handleResultClick = (item: any) => {
-    setSelectedMovie({
-      id: item.id,
-      title: item.title,
-      description: 'Una película o serie interesante que coincide con tu búsqueda.',
-      genre: 'Varios',
-      year: '2025',
-      image: item.image,
-    })
-    setIsModalOpen(true)
-  }
+    setSelectedMovie(item);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,26 +129,35 @@ export default function SearchPage() {
                   <h2 className="text-2xl font-bold mb-4">
                     Resultados para "{searchQuery}"
                   </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {mockResults.map((item) => (
-                      <div
-                        key={item.id}
-                        className="cursor-pointer group"
-                        onClick={() => handleResultClick(item)}
-                      >
-                        <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-2 transition-transform group-hover:scale-105">
-                          <img
-                            src={item.image || "/placeholder.svg"}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
+
+                  {loading ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      Buscando...
+                    </div>
+                  ) : results.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {results.map((item) => (
+                        <div
+                          key={item.id}
+                          className="cursor-pointer group"
+                          onClick={() => handleResultClick(item)}
+                        >
+                          <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-2 transition-transform group-hover:scale-105">
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                            {item.title}
+                          </p>
                         </div>
-                        <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                          {item.title}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>No se encontraron resultados.</p>
+                  )}
                 </>
               ) : (
                 <div className="flex items-center justify-center h-64 text-center">
@@ -125,11 +174,12 @@ export default function SearchPage() {
         </div>
       </main>
 
+      {/* Modal Real */}
       <MovieModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         movie={selectedMovie}
       />
     </div>
-  )
+  );
 }

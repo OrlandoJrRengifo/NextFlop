@@ -1,128 +1,124 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Play, Clock, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
-import { ActionPopup } from '@/components/action-popup'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Play, Clock, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { ActionPopup } from "@/components/action-popup";
 
-const heroSlides = [
-  {
-    id: '1',
-    title: 'Película Destacada 1',
-    description: 'Una increíble aventura épica que te mantendrá al borde de tu asiento.',
-    image: '/epic-movie-scene.jpg',
-  },
-  {
-    id: '2',
-    title: 'Serie Recomendada',
-    description: 'La serie más vista de la temporada. No te la puedes perder.',
-    image: '/dramatic-tv-series.png',
-  },
-  {
-    id: '3',
-    title: 'Nuevo Estreno',
-    description: 'Recién llegada a NextFlop. Descubre esta joya del cine.',
-    image: '/new-movie-release.jpg',
-  },
-]
+export function HeroCarousel({ items }: { items: any[] }) {
+  const heroSlides = items;
 
-export function HeroCarousel() {
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [showPopup, setShowPopup] = useState(false)
-  const [popupMessage, setPopupMessage] = useState('')
-  const [popupIcon, setPopupIcon] = useState<'heart' | 'clock'>('heart')
-  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupIcon, setPopupIcon] = useState<"heart" | "clock">("heart");
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
+      if (heroSlides.length > 0) {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-  }
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)
-  }
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
 
   const handleAddToWatchLater = (title: string) => {
-    setPopupMessage(`"${title}" agregado a Ver más tarde`)
-    setPopupIcon('clock')
-    setShowPopup(true)
-    setTimeout(() => setShowPopup(false), 3000)
-  }
+    setPopupMessage(`"${title}" agregado a Ver más tarde`);
+    setPopupIcon("clock");
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 3000);
+  };
 
   const handleToggleFavorite = (id: string, title: string) => {
-    const newFavorites = new Set(favorites)
+    const newFavorites = new Set(favorites);
     if (newFavorites.has(id)) {
-      newFavorites.delete(id)
-      setPopupMessage(`"${title}" eliminado de Favoritos`)
+      newFavorites.delete(id);
+      setPopupMessage(`"${title}" eliminado de Favoritos`);
     } else {
-      newFavorites.add(id)
-      setPopupMessage(`"${title}" agregado a Favoritos`)
+      newFavorites.add(id);
+      setPopupMessage(`"${title}" agregado a Favoritos`);
     }
-    setFavorites(newFavorites)
-    setPopupIcon('heart')
-    setShowPopup(true)
-    setTimeout(() => setShowPopup(false), 3000)
+    setFavorites(newFavorites);
+    setPopupIcon("heart");
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 3000);
+  };
+
+  if (heroSlides.length === 0) {
+    return <div className="h-[60vh] w-full bg-muted animate-pulse rounded-xl"></div>;
   }
+
+  const slide = heroSlides[currentSlide];
 
   return (
     <>
       <div className="relative w-full h-[70vh] overflow-hidden">
-        {heroSlides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <img
-              src={slide.image || "/placeholder.svg"}
-              alt={slide.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 text-balance">
-                {slide.title}
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl text-pretty">
-                {slide.description}
-              </p>
-              <div className="flex gap-3">
-                <Button size="lg" className="bg-primary hover:bg-primary/90">
-                  <Play className="h-5 w-5 mr-2 fill-current" />
-                  Ver ahora
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  onClick={() => handleAddToWatchLater(slide.title)}
-                >
-                  <Clock className="h-5 w-5 mr-2" />
-                  Más tarde
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant={favorites.has(slide.id) ? "default" : "outline"}
-                  onClick={() => handleToggleFavorite(slide.id, slide.title)}
-                  className={favorites.has(slide.id) ? "bg-red-500 hover:bg-red-600" : ""}
-                >
-                  <Heart className={`h-5 w-5 ${favorites.has(slide.id) ? 'fill-current' : ''}`} />
-                </Button>
-              </div>
+        <div className="absolute inset-0 transition-opacity duration-700">
+          <img
+            src={slide.backdrop || slide.image || "/placeholder.jpg"}
+            alt={slide.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+
+          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              {slide.title}
+            </h1>
+
+            <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl">
+              {slide.description || "Sin descripción disponible."}
+            </p>
+
+            <div className="flex gap-3">
+              <Button size="lg" className="bg-primary hover:bg-primary/90">
+                <Play className="h-5 w-5 mr-2 fill-current" />
+                Ver ahora
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => handleAddToWatchLater(slide.title)}
+              >
+                <Clock className="h-5 w-5 mr-2" />
+                Más tarde
+              </Button>
+
+              <Button
+                size="lg"
+                variant={favorites.has(slide.id) ? "default" : "outline"}
+                onClick={() => handleToggleFavorite(slide.id, slide.title)}
+                className={
+                  favorites.has(slide.id)
+                    ? "bg-red-500 hover:bg-red-600"
+                    : ""
+                }
+              >
+                <Heart
+                  className={`h-5 w-5 ${
+                    favorites.has(slide.id) ? "fill-current" : ""
+                  }`}
+                />
+              </Button>
             </div>
           </div>
-        ))}
+        </div>
 
+        {/* Controles */}
         <Button
           variant="ghost"
           size="icon"
@@ -141,13 +137,16 @@ export function HeroCarousel() {
           <ChevronRight className="h-6 w-6" />
         </Button>
 
+        {/* Indicadores */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`h-2 rounded-full transition-all ${
-                index === currentSlide ? 'bg-primary w-8' : 'bg-muted-foreground/50 w-2'
+                index === currentSlide
+                  ? "bg-primary w-8"
+                  : "bg-muted-foreground/50 w-2"
               }`}
             />
           ))}
@@ -162,5 +161,5 @@ export function HeroCarousel() {
         icon={popupIcon}
       />
     </>
-  )
+  );
 }

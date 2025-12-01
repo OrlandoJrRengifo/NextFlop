@@ -8,6 +8,8 @@ services:
     container_name: nextflop-app
     ports:
       - "3000:3000"
+    env_file:
+      - ./src/frontend/.env
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
