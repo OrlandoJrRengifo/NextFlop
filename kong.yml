@@ -74,3 +74,12 @@ services:
         paths:
           - /api/onboarding
         strip_path: true
+
+    # PERFILES (Dentro de Auth Service)
+  - name: profiles-service
+    url: http://auth-service:3000/profiles # Redirige al controlador de perfiles
+    routes:
+      - name: profiles-routes
+        paths:
+          - /api/profiles
+        strip_path: true

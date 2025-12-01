@@ -17,7 +17,6 @@ export class UpdateProfileUseCase {
       throw new BadRequestException("No valid fields provided for update");
     }
 
-    // Siempre actualizamos la fecha de modificación
     const updatedProfile = await this.profileRepository.update(id, {
       ...updates,
       updatedAt: new Date(),

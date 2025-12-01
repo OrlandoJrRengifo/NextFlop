@@ -93,7 +93,7 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=24h
       - AUTH_SERVICE_URL=http://auth-service:3000
-      - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000/subscriptions
+      - SUBSCRIPTIONS_SERVICE_URL=http://subscriptions-service:3000
       - BILLING_SERVICE_URL=http://billing-service:3000/payments
     depends_on:
       - mongodb-auth
