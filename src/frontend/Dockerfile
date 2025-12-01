@@ -7,7 +7,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci
+# Use legacy-peer-deps to avoid peer dependency resolution failures inside the container
+# Use npm install (not ci) so the lockfile can be updated inside the build context when package.json changed
+RUN npm install --legacy-peer-deps
 
 # Build
 FROM base AS builder
