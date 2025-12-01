@@ -14,27 +14,37 @@ export class ProfileRepository implements IProfileRepository {
     private readonly profileModel: Model<ProfileDocument>
   ) {}
 
-  async create(profileData: Omit<Profile, "id" | "createdAt" | "updatedAt">): Promise<Profile> {
-    // Si la entidad viene sin ID, Mongo generará un ObjectId, pero tu arquitectura parece esperar UUIDs.
-    // Asumiremos que el ID se maneja antes o que aceptamos el de Mongo casteado a string.
-    const profile = new this.profileModel(profileData);
-    const saved = await profile.save();
-    return this.mapToEntity(saved);
+  async findByUserId(userId: string): Promise<Profile[]> {
+    const profiles = await this.profileModel.find({ userId }).exec();
+    return profiles.map((p) => this.toDomain(p));
   }
 
   async findById(id: string): Promise<Profile | null> {
     const profile = await this.profileModel.findById(id).exec();
-    return profile ? this.mapToEntity(profile) : null;
+    return profile ? this.toDomain(profile) : null;
   }
 
-  async findByUserId(userId: string): Promise<Profile[]> {
-    const profiles = await this.profileModel.find({ userId }).exec();
-    return profiles.map((doc) => this.mapToEntity(doc));
+  async create(profile: Profile): Promise<Profile> {
+    const newProfile = new this.profileModel({
+      _id: profile.id,
+      userId: profile.userId,
+      name: profile.name,
+      iconUrl: profile.iconUrl,
+      tasteProfile: profile.tasteProfile,
+      favorites: profile.favorites,
+      watchLater: profile.watchLater,
+      history: profile.history,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt
+    });
+    
+    const saved = await newProfile.save();
+    return this.toDomain(saved);
   }
 
-  async update(id: string, updateData: Partial<Profile>): Promise<Profile | null> {
-    const updated = await this.profileModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
-    return updated ? this.mapToEntity(updated) : null;
+  async update(id: string, updates: Partial<Profile>): Promise<Profile | null> {
+    const updated = await this.profileModel.findByIdAndUpdate(id, updates, { new: true }).exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -43,35 +53,58 @@ export class ProfileRepository implements IProfileRepository {
   }
 
   async addToFavorites(profileId: string, mediaId: string): Promise<Profile | null> {
-    return this.update(profileId, { $addToSet: { favorites: mediaId } } as any);
+    const updated = await this.profileModel.findByIdAndUpdate(
+      profileId, 
+      { $addToSet: { favorites: mediaId } },
+      { new: true }
+    ).exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
   async removeFromFavorites(profileId: string, mediaId: string): Promise<Profile | null> {
-    return this.update(profileId, { $pull: { favorites: mediaId } } as any);
+    const updated = await this.profileModel.findByIdAndUpdate(
+      profileId, 
+      { $pull: { favorites: mediaId } },
+      { new: true }
+    ).exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
   async addToWatchLater(profileId: string, mediaId: string): Promise<Profile | null> {
-    return this.update(profileId, { $addToSet: { watchLater: mediaId } } as any);
+    const updated = await this.profileModel.findByIdAndUpdate(
+      profileId, 
+      { $addToSet: { watchLater: mediaId } },
+      { new: true }
+    ).exec();
+    return updated ? this.toDomain(updated) : null;
   }
   
   async removeFromWatchLater(profileId: string, mediaId: string): Promise<Profile | null> {
-    return this.update(profileId, { $pull: { watchLater: mediaId } } as any);
+    const updated = await this.profileModel.findByIdAndUpdate(
+      profileId, 
+      { $pull: { watchLater: mediaId } },
+      { new: true }
+    ).exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
   async addToHistory(profileId: string, mediaId: string): Promise<Profile | null> {
     const historyItem = { mediaId, watchedAt: new Date() };
-    return this.update(profileId, { $push: { history: historyItem } } as any);
+    const updated = await this.profileModel.findByIdAndUpdate(
+      profileId, 
+      { $push: { history: historyItem } },
+      { new: true }
+    ).exec();
+    return updated ? this.toDomain(updated) : null;
   }
 
-  private mapToEntity(doc: ProfileDocument): Profile {
-    // Mapeo seguro a la Entidad
+  private toDomain(doc: ProfileDocument): Profile {
     return new Profile(
       doc._id.toString(),
       doc.userId,
       doc.name,
       doc.iconUrl,
       doc.tasteProfile || [],
-      // Aseguramos que sean arrays de strings
       (doc.favorites || []).map(f => f.toString()),
       (doc.watchLater || []).map(w => w.toString()),
       (doc.history || []).map(h => ({

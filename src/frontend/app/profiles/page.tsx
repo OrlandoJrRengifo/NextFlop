@@ -1,26 +1,48 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Play, Plus, Settings } from 'lucide-react'
+import { Play, Plus, Settings, Loader2 } from 'lucide-react'
+import { apiAuthFetch } from '@/services/api' // Fetch seguro con token
 
-// Mock profile data
-const mockProfiles = [
-  { id: '1', name: 'Juan', icon: '👨' },
-  { id: '2', name: 'María', icon: '👩' },
-  { id: '3', name: 'Kids', icon: '🧒' }
-]
+interface Profile {
+  id: string;
+  name: string;
+  iconUrl: string;
+}
 
 export default function ProfilesPage() {
   const router = useRouter()
-  const [profiles] = useState(mockProfiles)
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Carga de perfiles reales
+  useEffect(() => {
+    const loadProfiles = async () => {
+      try {
+        const data = await apiAuthFetch<Profile[]>('/api/profiles');
+        setProfiles(data || []);
+      } catch (error) {
+        console.error("Error cargando perfiles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfiles();
+  }, []);
 
   const handleProfileClick = (profileId: string) => {
-    // Store selected profile in localStorage or state management
     localStorage.setItem('selectedProfile', profileId)
     router.push('/home')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -44,8 +66,9 @@ export default function ProfilesPage() {
             onClick={() => handleProfileClick(profile.id)}
             className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:scale-105 transition-transform"
           >
+            {/* Renderizamos el Emoji guardado en iconUrl */}
             <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-border group-hover:border-primary flex items-center justify-center text-5xl transition-all">
-              {profile.icon}
+              {profile.iconUrl || '👤'}
             </div>
             <span className="text-lg font-medium text-muted-foreground group-hover:text-foreground transition-colors">
               {profile.name}

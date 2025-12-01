@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Play, ArrowLeft } from 'lucide-react'
+import { apiAuthFetch } from '@/services/api'
 
 const availableIcons = ['👨', '👩', '👦', '👧', '🧔', '👴', '👵', '🧒', '👶', '🐶', '🐱', '🦊']
 
@@ -20,11 +21,26 @@ export default function CreateProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('[v0] Profile created:', { profileName, selectedIcon })
-    alert('Perfil creado exitosamente')
-    setIsLoading(false)
-    router.push('/profiles')
+    
+    try {
+      // POST Real al backend
+      await apiAuthFetch('/api/profiles', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: profileName,
+          iconUrl: selectedIcon // Enviamos el emoji seleccionado
+        })
+      });
+      
+      alert('Perfil creado exitosamente');
+      router.push('/profiles');
+    } catch (error: any) {
+      console.error("Error creando perfil:", error);
+      const msg = error.info?.message || "No se pudo crear el perfil (¿Límite alcanzado?)";
+      alert(msg);
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
